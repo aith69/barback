@@ -68,5 +68,6 @@
   "waiter.ready": "Pronti da servire",
   "waiter.served": "Servito",
   "waiter.unserve": "Annulla servito",
-  "line.status.served": "Servito"
+  "line.status.served": "Servito",
+  "common.home": "Home"
 }
