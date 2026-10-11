@@ -48,5 +48,7 @@
   "line.status.pending_confirm": "Da confermare",
   "line.status.new": "Da preparare",
   "line.status.prepared": "Pronto",
-  "table.total": "Totale"
+  "table.total": "Totale",
+  "admin.confirmDelete": "Eliminare \"{name}\"? Gli ordini passati non vengono toccati.",
+  "admin.confirmDeleteCategory": "Eliminare la categoria \"{name}\" e tutto il suo contenuto? Gli ordini passati non vengono toccati."
 }

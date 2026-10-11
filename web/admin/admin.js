@@ -24,6 +24,10 @@ async function act(fn) {
   await refresh();
 }
 
+const remove = (resource, id, name, message = 'admin.confirmDelete') => {
+  if (confirm(t(message, { name }))) act(() => api('DELETE', `/api/admin/${resource}/${id}`));
+};
+
 const patch = (resource, id, body) => act(() => api('PATCH', `/api/admin/${resource}/${id}`, body));
 
 // --- building blocks ---
@@ -64,9 +68,9 @@ function mover(path, ids, id) {
 
 function notes(list, owner) {
   return h('div', { class: 'notes' },
-    list.map((m) => h('span', { class: m.active ? 'chip' : 'chip off' },
+    list.map((m) => h('span', { class: 'chip' },
       nameInput(m.name, (v) => patch('modifiers', m.id, { name: v })),
-      h('button', { type: 'button', title: t('admin.active'), onclick: () => patch('modifiers', m.id, { active: !m.active }) }, m.active ? '✕' : '↺'))),
+      h('button', { type: 'button', title: t('common.delete'), onclick: () => remove('modifiers', m.id, m.name) }, '✕'))),
     addForm(t('admin.notes.add'), (name) => act(() => api('POST', '/api/admin/modifiers', { ...owner, name }))));
 }
 
@@ -78,7 +82,7 @@ function addItem(categoryId, name, priceText) {
 
 // --- views ---
 function itemRow(i, siblingIds) {
-  return h('div', { class: i.active ? 'row' : 'row off' },
+  return h('div', { class: i.sold_out ? 'row off' : 'row' },
     nameInput(i.name, (v) => patch('items', i.id, { name: v })),
     h('input', {
       type: 'text', inputmode: 'decimal', size: 6, value: formatDecimal(i.price_cents, language),
@@ -89,7 +93,7 @@ function itemRow(i, siblingIds) {
     }),
     symbol,
     check(t('admin.item.soldOut'), i.sold_out, (v) => patch('items', i.id, { sold_out: v })),
-    check(t('admin.active'), i.active, (v) => patch('items', i.id, { active: v })),
+    h('button', { type: 'button', title: t('common.delete'), onclick: () => remove('items', i.id, i.name) }, '🗑'),
     mover('/api/admin/items/order', siblingIds, i.id),
     notes(state.modifiers.filter((m) => m.item_id === i.id), { item_id: i.id }));
 }
@@ -105,7 +109,8 @@ function renderMenu() {
         h('header', {},
           nameInput(c.name, (v) => patch('categories', c.id, { name: v })),
           check(t('admin.active'), c.active, (v) => patch('categories', c.id, { active: v })),
-          mover('/api/admin/categories/order', categoryIds, c.id)),
+          mover('/api/admin/categories/order', categoryIds, c.id),
+          h('button', { type: 'button', title: t('common.delete'), onclick: () => remove('categories', c.id, c.name, 'admin.confirmDeleteCategory') }, '🗑')),
         h('div', {}, t('admin.notes'), notes(state.modifiers.filter((m) => m.category_id === c.id), { category_id: c.id })),
         items.map((i) => itemRow(i, itemIds)),
         addForm(t('admin.item.name'), (name, price) => addItem(c.id, name, price), true));
@@ -118,7 +123,8 @@ function renderOperators() {
     addForm(t('admin.operators.name'), (name) => act(() => api('POST', '/api/admin/operators', { name }))),
     ...state.operators.map((o) => h('div', { class: o.active ? 'row' : 'row off' },
       nameInput(o.name, (v) => patch('operators', o.id, { name: v })),
-      check(t('admin.active'), o.active, (v) => patch('operators', o.id, { active: v })))),
+      check(t('admin.active'), o.active, (v) => patch('operators', o.id, { active: v })),
+      h('button', { type: 'button', title: t('common.delete'), onclick: () => remove('operators', o.id, o.name) }, '🗑'))),
   ];
 }
 

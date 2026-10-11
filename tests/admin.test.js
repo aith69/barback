@@ -24,7 +24,7 @@ test('operators: create, trim, no duplicates, deactivate', async (t) => {
   assert.equal(list.body.length, 1); // deactivated, not deleted
 });
 
-test('menu: categories and items, ordering, validation, no hard delete', async (t) => {
+test('menu: categories and items, ordering, validation', async (t) => {
   const app = await makeApp();
   t.after(() => app.close());
 
@@ -56,7 +56,7 @@ test('menu: categories and items, ordering, validation, no hard delete', async (
   assert.equal(menu.categories.find((c) => c.id === coffee.id).active, false);
   assert.equal(menu.categories.length, 2);
 
-  assert.equal((await call(app, 'DELETE', `/api/admin/items/${espresso.id}`)).status, 404);
+  
 });
 
 test('quick notes belong to a category or to an item', async (t) => {

@@ -3,15 +3,15 @@ export default async function catalog(app) {
   const { db } = app;
 
   app.get('/api/operators', async () =>
-    db.prepare('SELECT id, name FROM operators WHERE active = 1 ORDER BY name COLLATE NOCASE').all());
+    db.prepare('SELECT id, name FROM operators WHERE active = 1 AND deleted_at IS NULL ORDER BY name COLLATE NOCASE').all());
 
   // Active menu. Each item carries its quick notes: the category's first, then its own.
   app.get('/api/menu', async () => {
-    const categories = db.prepare('SELECT id, name FROM categories WHERE active = 1 ORDER BY sort_order, id').all();
+    const categories = db.prepare('SELECT id, name FROM categories WHERE active = 1 AND deleted_at IS NULL ORDER BY sort_order, id').all();
     const items = db
-      .prepare('SELECT id, category_id, name, price_cents, sold_out FROM items WHERE active = 1 ORDER BY sort_order, id')
+      .prepare('SELECT id, category_id, name, price_cents, sold_out FROM items WHERE active = 1 AND deleted_at IS NULL ORDER BY sort_order, id')
       .all();
-    const notes = db.prepare('SELECT id, category_id, item_id, name FROM modifiers WHERE active = 1 ORDER BY sort_order, id').all();
+    const notes = db.prepare('SELECT id, category_id, item_id, name FROM modifiers WHERE active = 1 AND deleted_at IS NULL ORDER BY sort_order, id').all();
     const pick = ({ id, name }) => ({ id, name });
 
     return {
