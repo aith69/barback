@@ -21,9 +21,9 @@ export default async function menu(app) {
 
   // Everything the admin page needs, inactive entries included.
   app.get('/api/admin/menu', async () => ({
-    categories: db.prepare('SELECT * FROM categories ORDER BY sort_order, id').all().map(cat),
-    items: db.prepare('SELECT * FROM items ORDER BY sort_order, id').all().map(item),
-    modifiers: db.prepare('SELECT * FROM modifiers ORDER BY sort_order, id').all().map((m) => mapBools(m, ['active'])),
+    categories: db.prepare('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY sort_order, id').all().map(cat),
+    items: db.prepare('SELECT * FROM items WHERE deleted_at IS NULL ORDER BY sort_order, id').all().map(item),
+    modifiers: db.prepare('SELECT * FROM modifiers WHERE deleted_at IS NULL ORDER BY sort_order, id').all().map((m) => mapBools(m, ['active'])),
   }));
 
   // --- categories ---

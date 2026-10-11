@@ -8,14 +8,18 @@ export default async function operators(app) {
   const out = (row) => mapBools(row, ['active']);
 
   app.get('/api/admin/operators', async () =>
-    db.prepare('SELECT * FROM operators ORDER BY name COLLATE NOCASE').all().map(out));
+    db.prepare('SELECT * FROM operators WHERE deleted_at IS NULL ORDER BY name COLLATE NOCASE').all().map(out));
 
   app.post(
     '/api/admin/operators',
     { schema: { body: { type: 'object', required: ['name'], properties: { name: nameSchema } } } },
     async (req, reply) => {
       const { name } = cleanBody(req.body);
-      const { lastInsertRowid } = db.prepare('INSERT INTO operators (name) VALUES (?)').run(name);
+      // Same name as a deleted operator: bring that one back, so their history stays theirs.
+      const revived = db.prepare('UPDATE operators SET deleted_at = NULL, active = 1 WHERE name = ? AND deleted_at IS NOT NULL').run(name);
+      const lastInsertRowid = revived.changes
+        ? db.prepare('SELECT id FROM operators WHERE name = ?').get(name).id
+        : db.prepare('INSERT INTO operators (name) VALUES (?)').run(name).lastInsertRowid;
       return reply.code(201).send(out(get.get(lastInsertRowid)));
     },
   );

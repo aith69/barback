@@ -48,5 +48,7 @@
   "line.status.pending_confirm": "To confirm",
   "line.status.new": "To prepare",
   "line.status.prepared": "Ready",
-  "table.total": "Total"
+  "table.total": "Total",
+  "admin.confirmDelete": "Delete \"{name}\"? Past orders are not affected.",
+  "admin.confirmDeleteCategory": "Delete category \"{name}\" and everything in it? Past orders are not affected."
 }

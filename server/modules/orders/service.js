@@ -10,11 +10,11 @@ export function createOrderService(db, config) {
       'SELECT o.*, op.name AS opened_by_name FROM orders o LEFT JOIN operators op ON op.id = o.opened_by WHERE o.id = ?',
     ),
     insertOrder: db.prepare('INSERT INTO orders (table_number, opened_by) VALUES (?, ?)'),
-    operator: db.prepare('SELECT id FROM operators WHERE id = ? AND active = 1'),
+    operator: db.prepare('SELECT id FROM operators WHERE id = ? AND active = 1 AND deleted_at IS NULL'),
     item: db.prepare(
-      'SELECT i.*, c.active AS category_active FROM items i JOIN categories c ON c.id = i.category_id WHERE i.id = ?',
+      'SELECT i.*, c.active AS category_active, c.deleted_at AS category_deleted_at FROM items i JOIN categories c ON c.id = i.category_id WHERE i.id = ?',
     ),
-    allowedNotes: db.prepare('SELECT id, name FROM modifiers WHERE active = 1 AND (item_id = @item OR category_id = @category)'),
+    allowedNotes: db.prepare('SELECT id, name FROM modifiers WHERE active = 1 AND deleted_at IS NULL AND (item_id = @item OR category_id = @category)'),
     currentNotes: db.prepare('SELECT modifier_id AS id, modifier_name AS name FROM order_line_modifiers WHERE order_line_id = ?'),
     insertLine: db.prepare(
       'INSERT INTO order_lines (order_id, item_id, item_name, quantity, unit_price_cents, note, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -70,7 +70,9 @@ export function createOrderService(db, config) {
 
   function insertLine(orderId, operatorId, { item_id, quantity, note, modifier_ids = [] }) {
     const item = q.item.get(item_id);
-    if (!item || !item.active || !item.category_active) throw httpError(400, 'unknown item');
+    if (!item || !item.active || !item.category_active || item.deleted_at || item.category_deleted_at) {
+      throw httpError(400, 'unknown item');
+    }
     if (item.sold_out) throw httpError(409, 'item sold out');
     const notes = resolveNotes(item, modifier_ids);
     const { lastInsertRowid } = q.insertLine.run(orderId, item.id, item.name, quantity, item.price_cents, cleanNote(note), operatorId);
