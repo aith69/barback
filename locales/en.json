@@ -18,5 +18,19 @@
   "who.title": "Who are you?",
   "table.title": "Table {number}",
   "table.free": "Free",
-  "table.occupied": "Occupied"
+  "table.occupied": "Occupied",
+  "admin.tab.menu": "Menu",
+  "admin.tab.operators": "Operators",
+  "admin.operators.name": "New operator name",
+  "admin.category.name": "New category name",
+  "admin.item.name": "New item name",
+  "admin.item.price": "Price",
+  "admin.item.soldOut": "Sold out",
+  "admin.active": "Active",
+  "admin.notes": "Quick notes",
+  "admin.notes.add": "New quick note",
+  "admin.moveUp": "Move up",
+  "admin.moveDown": "Move down",
+  "admin.error.exists": "This name already exists",
+  "admin.error.price": "Invalid price"
 }

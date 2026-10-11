@@ -20,6 +20,18 @@ export async function buildApp(config, { logger = false } = {}) {
   app.decorate('i18n', i18n);
   app.addHook('onClose', async () => db.close());
 
+  // Map SQLite constraint violations to clean HTTP errors.
+  app.setErrorHandler((err, req, reply) => {
+    const code = typeof err.code === 'string' ? err.code : '';
+    if (code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return reply.code(409).send({ statusCode: 409, error: 'Conflict', message: 'already exists' });
+    }
+    if (code.startsWith('SQLITE_CONSTRAINT')) {
+      return reply.code(400).send({ statusCode: 400, error: 'Bad Request', message: 'invalid reference or value' });
+    }
+    return reply.send(err);
+  });
+
   for (const mod of modules) {
     if (isEnabled(mod, config)) await app.register(mod.plugin);
   }

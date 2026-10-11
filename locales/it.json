@@ -18,5 +18,19 @@
   "who.title": "Chi sei?",
   "table.title": "Tavolo {number}",
   "table.free": "Libero",
-  "table.occupied": "Occupato"
+  "table.occupied": "Occupato",
+  "admin.tab.menu": "Menù",
+  "admin.tab.operators": "Operatori",
+  "admin.operators.name": "Nome nuovo operatore",
+  "admin.category.name": "Nome nuova categoria",
+  "admin.item.name": "Nome nuovo prodotto",
+  "admin.item.price": "Prezzo",
+  "admin.item.soldOut": "Esaurito",
+  "admin.active": "Attivo",
+  "admin.notes": "Note rapide",
+  "admin.notes.add": "Nuova nota rapida",
+  "admin.moveUp": "Sposta su",
+  "admin.moveDown": "Sposta giù",
+  "admin.error.exists": "Questo nome esiste già",
+  "admin.error.price": "Prezzo non valido"
 }
