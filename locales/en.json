@@ -32,5 +32,21 @@
   "admin.moveUp": "Move up",
   "admin.moveDown": "Move down",
   "admin.error.exists": "This name already exists",
-  "admin.error.price": "Invalid price"
+  "admin.error.price": "Invalid price",
+  "who.empty": "No operators yet. Ask the admin to add some.",
+  "who.change": "change",
+  "waiter.tables": "Tables",
+  "waiter.existing": "Ordered",
+  "waiter.draft": "To send",
+  "waiter.empty": "Nothing ordered yet",
+  "waiter.send": "Send order",
+  "waiter.notePlaceholder": "Free text note",
+  "waiter.confirmRemove": "Remove this line?",
+  "waiter.error.unavailable": "Some items are no longer available. The menu has been reloaded.",
+  "waiter.noMenu": "The menu is empty. Ask the admin to add items.",
+  "item.soldOut": "Sold out",
+  "line.status.pending_confirm": "To confirm",
+  "line.status.new": "To prepare",
+  "line.status.prepared": "Ready",
+  "table.total": "Total"
 }
