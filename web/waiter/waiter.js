@@ -35,6 +35,16 @@ function showWho() {
       : h('p', {}, t('who.empty')));
 }
 
+// Tables whose lines are all prepared: ready to be served.
+function readyList(tables) {
+  const ready = tables.filter((tb) => tb.occupied && tb.pending === 0 && tb.prepared > 0);
+  if (!ready.length) return null;
+  return h('div', { class: 'ready-list' },
+    h('h3', {}, t('waiter.ready')),
+    ready.map((tb) => h('a', { href: `#/table/${tb.number}`, class: 'ready-row' },
+      t('table.title', { number: tb.number }), h('span', {}, '✓'))));
+}
+
 // --- table grid ---
 async function showGrid() {
   const me = (timer = onLive(() => draw().catch(() => {})));
@@ -45,7 +55,8 @@ async function showGrid() {
       h('div', { class: 'grid' }, tables.map((tb) =>
         h('a', { href: `#/table/${tb.number}`, class: tb.occupied ? 'table on' : 'table' },
           h('strong', {}, String(tb.number)),
-          h('small', {}, tb.pending ? `⏳ ${tb.pending}` : tb.prepared ? '✓' : '')))));
+          h('small', {}, tb.pending ? `⏳ ${tb.pending}` : tb.prepared ? '✓' : ''))),
+      readyList(tables));
   };
   try { await draw(); } catch { fill(app, h('p', {}, t('common.error'))); }
 }

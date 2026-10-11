@@ -64,5 +64,6 @@
   "counter.cash.close": "Close table",
   "counter.cash.confirmClose": "Close table {number} for {amount}?",
   "counter.cash.addItems": "Add or change items",
-  "counter.error.amount": "Invalid amount"
+  "counter.error.amount": "Invalid amount",
+  "waiter.ready": "Ready to serve"
 }
