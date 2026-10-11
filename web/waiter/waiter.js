@@ -35,14 +35,18 @@ function showWho() {
       : h('p', {}, t('who.empty')));
 }
 
-// Tables whose lines are all prepared: ready to be served.
-function readyList(tables) {
-  const ready = tables.filter((tb) => tb.occupied && tb.pending === 0 && tb.prepared > 0);
+const setServed = (number, served) =>
+  api('POST', `/api/tables/${number}/served`, { served }).catch(() => alert(t('common.error')));
+
+// Tables whose lines are all prepared and not served yet.
+function readyList(tables, onChange) {
+  const ready = tables.filter((tb) => tb.occupied && tb.pending === 0 && tb.to_serve > 0);
   if (!ready.length) return null;
   return h('div', { class: 'ready-list' },
     h('h3', {}, t('waiter.ready')),
-    ready.map((tb) => h('a', { href: `#/table/${tb.number}`, class: 'ready-row' },
-      t('table.title', { number: tb.number }), h('span', {}, '✓'))));
+    ready.map((tb) => h('div', { class: 'ready-row' },
+      h('a', { href: `#/table/${tb.number}` }, t('table.title', { number: tb.number })),
+      h('button', { type: 'button', class: 'primary', onclick: () => setServed(tb.number, true).then(onChange) }, t('waiter.served')))));
 }
 
 // --- table grid ---
@@ -55,8 +59,8 @@ async function showGrid() {
       h('div', { class: 'grid' }, tables.map((tb) =>
         h('a', { href: `#/table/${tb.number}`, class: tb.occupied ? 'table on' : 'table' },
           h('strong', {}, String(tb.number)),
-          h('small', {}, tb.pending ? `⏳ ${tb.pending}` : tb.prepared ? '✓' : ''))),
-      readyList(tables));
+          h('small', {}, tb.pending ? `⏳ ${tb.pending}` : tb.to_serve ? '✓' : '')))),
+      readyList(tables, () => draw().catch(() => {})));
   };
   try { await draw(); } catch { fill(app, h('p', {}, t('common.error'))); }
 }
@@ -143,21 +147,33 @@ async function showTable(number) {
     });
   }
 
+  function serveButton(lines) {
+    const toServe = lines.some((l) => l.status === 'prepared' && !l.served_at);
+    const served = lines.some((l) => l.served_at);
+    if (!toServe && !served) return null;
+    return h('button', {
+      type: 'button',
+      class: toServe ? 'primary send' : 'link',
+      onclick: () => setServed(number, toServe).then(() => load().catch(() => {})),
+    }, t(toServe ? 'waiter.served' : 'waiter.unserve'));
+  }
+
   function drawExisting() {
     const lines = order ? order.lines : [];
     fill(existing,
       h('h3', {}, t('waiter.existing')),
       lines.length
         ? h('ul', { class: 'lines' }, lines.map((l) =>
-          h('li', { class: `line ${l.status}`, onclick: () => editExisting(l) },
+          h('li', { class: `line ${l.served_at ? 'served' : l.status}`, onclick: () => editExisting(l) },
             h('span', { class: 'body' },
               `${l.quantity}× ${l.item_name}`,
               l.modifiers.length ? h('small', {}, l.modifiers.map((m) => m.name).join(', ')) : null,
               l.note ? h('small', {}, `“${l.note}”`) : null),
             h('span', { class: 'side' }, money(l.quantity * l.unit_price_cents),
-              h('span', { class: 'status' }, t(`line.status.${l.status}`))))))
+              h('span', { class: 'status' }, t(`line.status.${l.served_at ? 'served' : l.status}`))))))
         : h('p', { class: 'muted' }, t('waiter.empty')),
-      order && lines.length ? h('p', { class: 'total' }, `${t('table.total')}: ${money(order.subtotal_cents)}`) : null);
+      order && lines.length ? h('p', { class: 'total' }, `${t('table.total')}: ${money(order.subtotal_cents)}`) : null,
+      serveButton(lines));
   }
 
   function addToDraft(item) {

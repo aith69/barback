@@ -27,12 +27,12 @@ export function createCounterService(db) {
        WHERE o.status = 'open' GROUP BY o.id ORDER BY o.table_number`,
     ),
     setLine: db.prepare(
-      `UPDATE order_lines SET status = ?
+      `UPDATE order_lines SET status = ?, served_at = NULL
        WHERE id = ? AND removed_at IS NULL AND order_id IN (SELECT id FROM orders WHERE status = 'open')`,
     ),
     openOrder: db.prepare("SELECT id FROM orders WHERE table_number = ? AND status = 'open'"),
     setTable: db.prepare(
-      'UPDATE order_lines SET status = @to WHERE order_id = @order AND status = @from AND removed_at IS NULL',
+      'UPDATE order_lines SET status = @to, served_at = NULL WHERE order_id = @order AND status = @from AND removed_at IS NULL',
     ),
     subtotal: db.prepare(
       'SELECT COALESCE(SUM(quantity * unit_price_cents), 0) AS total FROM order_lines WHERE order_id = ? AND removed_at IS NULL',

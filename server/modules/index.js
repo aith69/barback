@@ -7,6 +7,7 @@ import orders from './orders/index.js';
 import removal from './removal/index.js';
 import counter from './counter/index.js';
 import events from './events/index.js';
+import served from './served/index.js';
 
 // Each module is a Fastify plugin. Optional modules are switched on by
 // config.modules[name]; core ones are always on.
@@ -20,6 +21,7 @@ export const modules = [
   { name: 'removal', plugin: removal, core: true },
   { name: 'counter', plugin: counter, core: true },
   { name: 'events', plugin: events, core: true },
+  { name: 'served', plugin: served, core: true },
   // later: auth, stats, customer
 ];
 

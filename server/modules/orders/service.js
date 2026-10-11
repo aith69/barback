@@ -31,7 +31,7 @@ export function createOrderService(db, config) {
        ) WHERE id = @id`,
     ),
     lines: db.prepare(
-      `SELECT l.id, l.item_id, l.item_name, l.quantity, l.unit_price_cents, l.note, l.status, l.created_at, op.name AS created_by
+      `SELECT l.id, l.item_id, l.item_name, l.quantity, l.unit_price_cents, l.note, l.status, l.served_at, l.created_at, op.name AS created_by
        FROM order_lines l LEFT JOIN operators op ON op.id = l.created_by
        WHERE l.order_id = ? AND l.removed_at IS NULL ORDER BY l.id`,
     ),
@@ -43,7 +43,8 @@ export function createOrderService(db, config) {
     openSummary: db.prepare(
       `SELECT o.table_number AS number,
               SUM(CASE WHEN l.status = 'new' THEN 1 ELSE 0 END) AS pending,
-              SUM(CASE WHEN l.status = 'prepared' THEN 1 ELSE 0 END) AS prepared
+              SUM(CASE WHEN l.status = 'prepared' THEN 1 ELSE 0 END) AS prepared,
+              SUM(CASE WHEN l.status = 'prepared' AND l.served_at IS NULL THEN 1 ELSE 0 END) AS to_serve
        FROM orders o LEFT JOIN order_lines l ON l.order_id = o.id AND l.removed_at IS NULL
        WHERE o.status = 'open' GROUP BY o.id`,
     ),
@@ -115,7 +116,7 @@ export function createOrderService(db, config) {
       const open = new Map(q.openSummary.all().map((r) => [r.number, r]));
       return Array.from({ length: config.maxTables }, (_, i) => {
         const r = open.get(i + 1);
-        return { number: i + 1, occupied: Boolean(r), pending: r?.pending ?? 0, prepared: r?.prepared ?? 0 };
+        return { number: i + 1, occupied: Boolean(r), pending: r?.pending ?? 0, prepared: r?.prepared ?? 0, to_serve: r?.to_serve ?? 0 };
       });
     },
 
