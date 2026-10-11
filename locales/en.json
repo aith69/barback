@@ -1,0 +1,22 @@
+{
+  "app.name": "Barback",
+  "common.add": "Add",
+  "common.back": "Back",
+  "common.cancel": "Cancel",
+  "common.close": "Close",
+  "common.confirm": "Confirm",
+  "common.delete": "Delete",
+  "common.edit": "Edit",
+  "common.error": "Something went wrong",
+  "common.loading": "Loading...",
+  "common.save": "Save",
+  "home.tagline": "Choose your area",
+  "role.waiter": "Waiter",
+  "role.counter": "Counter",
+  "role.admin": "Admin",
+  "role.stats": "Statistics",
+  "who.title": "Who are you?",
+  "table.title": "Table {number}",
+  "table.free": "Free",
+  "table.occupied": "Occupied"
+}
