@@ -11,6 +11,7 @@ let operators = [];
 let operator = null;
 let menu = { categories: [] };
 let timer = null; // polling interval of the current view
+let unsent = () => 0; // set by the table page: how many lines are waiting to be sent
 
 const money = (cents) => formatMoney(cents, language, currency);
 const fill = (el, ...children) => el.replaceChildren(...children.flat().filter(Boolean));
@@ -22,9 +23,17 @@ const savedOperator = {
   set(id) { try { localStorage.setItem('barback.operator', String(id)); } catch { /* private mode */ } },
 };
 
+function leaveOk() {
+  if (unsent() === 0) return true;
+  if (!confirm(t('waiter.confirmLeave'))) return false;
+  unsent = () => 0; // discarded: no second prompt from the browser
+  return true;
+}
+window.barbackCanLeave = leaveOk; // asked by the Home link
+
 const topbar = (...left) =>
   h('div', { class: 'topbar' }, h('div', {}, ...left),
-    h('button', { type: 'button', class: 'link', onclick: () => { operator = null; route(); } }, `${operator.name} · ${t('who.change')}`));
+    h('button', { type: 'button', class: 'link', onclick: () => { if (leaveOk()) { operator = null; route(); } } }, `${operator.name} · ${t('who.change')}`));
 
 // --- "Who are you?" ---
 function showWho() {
@@ -106,6 +115,7 @@ async function showTable(number) {
   let categoryId = null;
   let sending = false;
   const draft = []; // lines not sent yet, only on this phone
+  unsent = () => draft.length;
   const existing = h('div');
   const drafts = h('div');
   const picker = h('div');
@@ -259,8 +269,23 @@ async function showTable(number) {
 }
 
 // --- routing ---
+let shownHash = location.hash; // address of the page on screen
+let restoring = false;
+
+// Back/forward and links between pages: ask before dropping unsent lines.
+function onHashChange() {
+  if (restoring) { restoring = false; return; } // we just put the old address back
+  if (unsent() > 0 && !confirm(t('waiter.confirmLeave'))) {
+    restoring = true;
+    location.hash = shownHash; // stay: nothing is re-rendered, the lines are still there
+    return;
+  }
+  shownHash = location.hash;
+  route();
+}
 function route() {
   if (timer) timer(); // stops the live updates of the previous view
+  unsent = () => 0;
   timer = null;
   if (!operator) return showWho();
   const match = location.hash.match(/^#\/table\/(\d+)$/);
@@ -275,7 +300,10 @@ try {
   operators = ops;
   menu = menuData;
   operator = operators.find((o) => o.id === savedOperator.get()) ?? null;
-  window.addEventListener('hashchange', route);
+  window.addEventListener('hashchange', onHashChange);
+  window.addEventListener('beforeunload', (e) => {
+    if (unsent() > 0) { e.preventDefault(); e.returnValue = ''; }
+  });
   route();
 } catch {
   app.textContent = t('common.error');

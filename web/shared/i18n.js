@@ -17,6 +17,9 @@ function mountHomeBar() {
   const link = document.createElement('a');
   link.href = '/';
   link.textContent = `⌂ ${t('common.home')}`;
+  link.addEventListener('click', (e) => {
+    if (window.barbackCanLeave && !window.barbackCanLeave()) e.preventDefault();
+  });
   const bar = document.createElement('nav');
   bar.className = 'homebar';
   bar.append(link);
