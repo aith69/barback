@@ -33,3 +33,5 @@ dialog.editor { border: 1px solid currentColor; border-radius: .75rem; padding: 
 .mods { display: grid; gap: .5rem; margin: .5rem 0; }
 .editor input[type=text] { width: 100%; box-sizing: border-box; font: inherit; padding: .6rem; margin: .5rem 0; }
 .actions { display: flex; gap: .5rem; justify-content: flex-end; flex-wrap: wrap; }
+.ready-list { margin-top: 1.5rem; }
+.ready-row { display: flex; justify-content: space-between; padding: .9rem; margin: .4rem 0; border: 1px solid #2e9e5b; border-left-width: 5px; border-radius: .5rem; text-decoration: none; color: inherit; font-size: 1.1rem; }

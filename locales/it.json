@@ -64,5 +64,6 @@
   "counter.cash.close": "Chiudi tavolo",
   "counter.cash.confirmClose": "Chiudere il tavolo {number} per {amount}?",
   "counter.cash.addItems": "Aggiungi o modifica prodotti",
-  "counter.error.amount": "Importo non valido"
+  "counter.error.amount": "Importo non valido",
+  "waiter.ready": "Pronti da servire"
 }
