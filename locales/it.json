@@ -69,5 +69,6 @@
   "waiter.served": "Servito",
   "waiter.unserve": "Annulla servito",
   "line.status.served": "Servito",
-  "common.home": "Home"
+  "common.home": "Home",
+  "waiter.confirmLeave": "Hai prodotti non ancora inviati. Uscire e scartarli?"
 }
