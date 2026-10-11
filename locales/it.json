@@ -57,7 +57,7 @@
   "counter.allDone": "Tutto fatto",
   "counter.ready": "Pronti",
   "counter.undo": "Annulla",
-  "counter.cash.empty": "Nessun tavolo aperto",
+  "counter.cash.empty": "Nessun tavolo pronto per il conto",
   "counter.cash.paid": "Importo incassato",
   "counter.cash.adjustment": "Sconto / arrotondamento",
   "counter.cash.roundDown": "Arrotonda per difetto",

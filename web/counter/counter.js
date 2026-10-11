@@ -87,14 +87,15 @@ async function showQueue() {
 async function showCash() {
   const me = (stop = onLive(() => draw().catch(() => {})));
   const draw = async () => {
-    const tables = await api('GET', '/api/counter/tables');
+    // only tables with nothing left to prepare (empty ones stay, so they can be closed)
+    const tables = (await api('GET', '/api/counter/tables')).filter((tb) => !tb.pending);
     if (stop !== me) return;
     fill(app, header('cash'),
       tables.length
         ? h('div', { class: 'cash' }, tables.map((tb) =>
           h('a', { href: `#/cash/${tb.number}`, class: 'cashrow' },
             h('strong', {}, t('table.title', { number: tb.number })),
-            h('span', {}, tb.pending ? `⏳ ${tb.pending}` : tb.lines ? '✓' : ''),
+            h('span', {}, tb.lines ? '✓' : ''),
             h('span', {}, money(tb.subtotal_cents)))))
         : h('p', { class: 'muted' }, t('counter.cash.empty')));
   };

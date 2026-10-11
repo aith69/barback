@@ -57,7 +57,7 @@
   "counter.allDone": "All done",
   "counter.ready": "Ready",
   "counter.undo": "Undo",
-  "counter.cash.empty": "No open tables",
+  "counter.cash.empty": "No tables ready for payment",
   "counter.cash.paid": "Amount paid",
   "counter.cash.adjustment": "Discount / rounding",
   "counter.cash.roundDown": "Round down",
