@@ -32,5 +32,21 @@
   "admin.moveUp": "Sposta su",
   "admin.moveDown": "Sposta giù",
   "admin.error.exists": "Questo nome esiste già",
-  "admin.error.price": "Prezzo non valido"
+  "admin.error.price": "Prezzo non valido",
+  "who.empty": "Nessun operatore. Chiedi all'admin di aggiungerne.",
+  "who.change": "cambia",
+  "waiter.tables": "Tavoli",
+  "waiter.existing": "Ordinato",
+  "waiter.draft": "Da inviare",
+  "waiter.empty": "Ancora nulla",
+  "waiter.send": "Invia comanda",
+  "waiter.notePlaceholder": "Nota libera",
+  "waiter.confirmRemove": "Rimuovere questa riga?",
+  "waiter.error.unavailable": "Alcuni prodotti non sono più disponibili. Il menù è stato ricaricato.",
+  "waiter.noMenu": "Il menù è vuoto. Chiedi all'admin di aggiungere i prodotti.",
+  "item.soldOut": "Esaurito",
+  "line.status.pending_confirm": "Da confermare",
+  "line.status.new": "Da preparare",
+  "line.status.prepared": "Pronto",
+  "table.total": "Totale"
 }
