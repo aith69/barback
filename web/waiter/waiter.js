@@ -2,6 +2,7 @@ import { loadI18n, t } from '/shared/i18n.js';
 import { api } from '/shared/api.js';
 import { h } from '/shared/dom.js';
 import { formatMoney } from '/shared/money.js';
+import { onLive } from '/shared/live.js';
 
 const app = document.getElementById('app');
 let language = 'en';
@@ -36,7 +37,7 @@ function showWho() {
 
 // --- table grid ---
 async function showGrid() {
-  const me = (timer = setInterval(() => draw().catch(() => {}), 5000));
+  const me = (timer = onLive(() => draw().catch(() => {})));
   const draw = async () => {
     const tables = await api('GET', '/api/tables');
     if (timer !== me) return; // navigated away meanwhile
@@ -85,7 +86,7 @@ function openEditor({ title, item, quantity = 1, selected = [], note = '', extra
 
 // --- table page ---
 async function showTable(number) {
-  const me = (timer = setInterval(() => load().catch(() => {}), 5000));
+  const me = (timer = onLive(() => load().catch(() => {})));
   let order = null;
   let categoryId = null;
   let sending = false;
@@ -232,7 +233,7 @@ async function showTable(number) {
 
 // --- routing ---
 function route() {
-  clearInterval(timer);
+  if (timer) timer(); // stops the live updates of the previous view
   timer = null;
   if (!operator) return showWho();
   const match = location.hash.match(/^#\/table\/(\d+)$/);

@@ -1,0 +1,16 @@
+main { max-width: 56rem; }
+.tabs { display: flex; gap: .5rem; margin: .5rem 0 1rem; }
+.tabs a { padding: .6rem 1.2rem; border: 1px solid currentColor; border-radius: .5rem; text-decoration: none; color: inherit; }
+.tabs a.on { background: CanvasText; color: Canvas; }
+.card { border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: .6rem; padding: .75rem; margin: .75rem 0; }
+.card > header { display: flex; align-items: center; gap: .75rem; justify-content: space-between; }
+.card > header h3 { margin: 0; }
+.todo { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; width: 100%; font: inherit; text-align: left; padding: .8rem; margin: .35rem 0; border: 1px solid currentColor; border-radius: .5rem; background: Canvas; color: CanvasText; cursor: pointer; }
+.todo.done { opacity: .5; }
+.todo small { opacity: .75; }
+.ready { display: flex; justify-content: space-between; align-items: center; padding: .4rem 0; border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent); }
+.cash { display: grid; gap: .5rem; }
+.cashrow { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem; border: 1px solid currentColor; border-radius: .5rem; text-decoration: none; color: inherit; font-size: 1.15rem; }
+.pay { display: flex; align-items: center; gap: .5rem; font-size: 1.2rem; margin: .5rem 0; }
+.pay input { width: 7rem; font: inherit; padding: .4rem; text-align: right; }
+.adjust { min-height: 1.2em; opacity: .8; }

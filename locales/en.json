@@ -50,5 +50,19 @@
   "line.status.prepared": "Ready",
   "table.total": "Total",
   "admin.confirmDelete": "Delete \"{name}\"? Past orders are not affected.",
-  "admin.confirmDeleteCategory": "Delete category \"{name}\" and everything in it? Past orders are not affected."
+  "admin.confirmDeleteCategory": "Delete category \"{name}\" and everything in it? Past orders are not affected.",
+  "counter.tab.queue": "To prepare",
+  "counter.tab.cash": "Cash",
+  "counter.queue.empty": "Nothing to prepare",
+  "counter.allDone": "All done",
+  "counter.ready": "Ready",
+  "counter.undo": "Undo",
+  "counter.cash.empty": "No open tables",
+  "counter.cash.paid": "Amount paid",
+  "counter.cash.adjustment": "Discount / rounding",
+  "counter.cash.roundDown": "Round down",
+  "counter.cash.close": "Close table",
+  "counter.cash.confirmClose": "Close table {number} for {amount}?",
+  "counter.cash.addItems": "Add or change items",
+  "counter.error.amount": "Invalid amount"
 }

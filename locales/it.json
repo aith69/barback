@@ -50,5 +50,19 @@
   "line.status.prepared": "Pronto",
   "table.total": "Totale",
   "admin.confirmDelete": "Eliminare \"{name}\"? Gli ordini passati non vengono toccati.",
-  "admin.confirmDeleteCategory": "Eliminare la categoria \"{name}\" e tutto il suo contenuto? Gli ordini passati non vengono toccati."
+  "admin.confirmDeleteCategory": "Eliminare la categoria \"{name}\" e tutto il suo contenuto? Gli ordini passati non vengono toccati.",
+  "counter.tab.queue": "Da preparare",
+  "counter.tab.cash": "Cassa",
+  "counter.queue.empty": "Niente da preparare",
+  "counter.allDone": "Tutto fatto",
+  "counter.ready": "Pronti",
+  "counter.undo": "Annulla",
+  "counter.cash.empty": "Nessun tavolo aperto",
+  "counter.cash.paid": "Importo incassato",
+  "counter.cash.adjustment": "Sconto / arrotondamento",
+  "counter.cash.roundDown": "Arrotonda per difetto",
+  "counter.cash.close": "Chiudi tavolo",
+  "counter.cash.confirmClose": "Chiudere il tavolo {number} per {amount}?",
+  "counter.cash.addItems": "Aggiungi o modifica prodotti",
+  "counter.error.amount": "Importo non valido"
 }

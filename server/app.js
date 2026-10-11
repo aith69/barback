@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import { EventEmitter } from 'node:events';
 import fastifyStatic from '@fastify/static';
 import path from 'node:path';
 import { root } from './config.js';
@@ -7,7 +8,7 @@ import { createI18n, loadLocales } from './i18n/index.js';
 import { modules, isEnabled } from './modules/index.js';
 
 export async function buildApp(config, { logger = false } = {}) {
-  const app = Fastify({ logger });
+  const app = Fastify({ logger, forceCloseConnections: true }); // open event streams must not block shutdown
   const db = openDb(config.dbPath);
   const locales = loadLocales();
   const i18n = createI18n(locales, config.language);
@@ -18,6 +19,16 @@ export async function buildApp(config, { logger = false } = {}) {
   app.decorate('config', config);
   app.decorate('db', db);
   app.decorate('i18n', i18n);
+
+  // Every successful write tells the open pages to refresh (see /api/events).
+  const events = new EventEmitter();
+  events.setMaxListeners(100);
+  app.decorate('events', events);
+  app.addHook('onResponse', async (req, reply) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD' && reply.statusCode < 400 && req.url.startsWith('/api/')) {
+      app.events.emit('change', { type: 'change' });
+    }
+  });
   app.addHook('onClose', async () => db.close());
 
   // Map SQLite constraint violations to clean HTTP errors.
