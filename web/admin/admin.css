@@ -1,0 +1,17 @@
+main { max-width: 48rem; }
+.tabs { display: flex; gap: .5rem; margin: 1rem 0; }
+.tabs button.on { font-weight: 700; text-decoration: underline; }
+.card { border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: .5rem; padding: .75rem; margin: .75rem 0; }
+.card > header, .row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin: .4rem 0; }
+.row { padding-top: .4rem; border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent); }
+.off { opacity: .5; }
+.check { display: inline-flex; gap: .25rem; align-items: center; }
+.move button { padding: .2rem .5rem; }
+.notes { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; margin: .3rem 0; width: 100%; }
+.chip { display: inline-flex; gap: .25rem; align-items: center; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); border-radius: 1rem; padding: .1rem .2rem .1rem .6rem; }
+.chip input { border: 0; background: transparent; font: inherit; color: inherit; min-width: 3ch; }
+.chip button { border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; }
+.add { display: flex; gap: .4rem; flex-wrap: wrap; margin: .5rem 0; }
+input[type=text] { font: inherit; padding: .3rem .4rem; }
+button { font: inherit; padding: .3rem .7rem; }
+.chip input[inputmode=decimal] { width: 4.5ch; text-align: right; }

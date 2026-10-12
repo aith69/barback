@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Barback</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/shared/style.css">
+</head>
+<body>
+  <main>
+    <h1 data-i18n="app.name">Barback</h1>
+    <p data-i18n="home.tagline"></p>
+    <nav>
+      <a href="/waiter/" data-i18n="role.waiter"></a>
+      <a href="/counter/" data-i18n="role.counter"></a>
+      <a href="/admin/" data-i18n="role.admin"></a>
+      <a href="/stats/" data-i18n="role.stats"></a>
+    </nav>
+  </main>
+  <script type="module">
+    import { loadI18n } from '/shared/i18n.js';
+    loadI18n();
+  </script>
+</body>
+</html>
