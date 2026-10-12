@@ -74,5 +74,7 @@
   "pin.title": "Enter PIN",
   "pin.unlock": "Unlock",
   "pin.wrong": "Wrong PIN",
-  "pin.locked": "Too many attempts. Wait a minute."
+  "pin.locked": "Too many attempts. Wait a minute.",
+  "counter.cash.preparing": "In preparation",
+  "counter.cash.markPrepared": "Mark as prepared"
 }

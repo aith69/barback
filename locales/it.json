@@ -74,5 +74,7 @@
   "pin.title": "Inserisci il PIN",
   "pin.unlock": "Sblocca",
   "pin.wrong": "PIN errato",
-  "pin.locked": "Troppi tentativi. Riprova tra un minuto."
+  "pin.locked": "Troppi tentativi. Riprova tra un minuto.",
+  "counter.cash.preparing": "In preparazione",
+  "counter.cash.markPrepared": "Segna preparato"
 }
