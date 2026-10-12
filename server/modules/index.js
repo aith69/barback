@@ -10,6 +10,7 @@ import events from './events/index.js';
 import served from './served/index.js';
 import auth from './auth/index.js';
 import stats from './stats/index.js';
+import backup from './backup/index.js';
 
 // Each module is a Fastify plugin. Optional modules are switched on by
 // config.modules[name]; core ones are always on.
@@ -26,6 +27,7 @@ export const modules = [
   { name: 'served', plugin: served, core: true },
   { name: 'auth', plugin: auth, core: true },
   { name: 'stats', plugin: stats, core: true },
+  { name: 'backup', plugin: backup, core: true },
   // later: auth, stats, customer
 ];
 
