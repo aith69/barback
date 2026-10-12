@@ -30,6 +30,7 @@ Use `BARBACK_CONFIG=/path/to/file.json` to load it from elsewhere.
 | `port` / `host` | `3000` / `0.0.0.0` | |
 | `tablesInside` | `7` | Tables 1..N are inside |
 | `tablesOutside` | `13` | The following tables are outside (a line separates the two groups) |
+| `timezone` | system | Splits the sales in days for the statistics, e.g. `Europe/Rome` |
 | `sharedPin` | `1234` | Shared PIN for counter, admin and statistics. **Change it** |
 | `dbPath` | `data/barback.db` | SQLite file: copy it to back up |
 | `modules` | `{}` | Optional modules, e.g. `{ "customer": true }` (future) |

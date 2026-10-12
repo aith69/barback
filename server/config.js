@@ -9,6 +9,7 @@ export const defaults = {
   port: 3000,
   language: 'en', // UI language, never taken from the browser
   currency: 'EUR',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, // splits the sales in days: set it in config.local.json, e.g. "Europe/Rome"
   dbPath: 'data/barback.db',
   tablesInside: 7, // tables 1..N are inside
   tablesOutside: 13, // the following ones are outside: a line separates the two groups

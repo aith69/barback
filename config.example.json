@@ -4,5 +4,6 @@
   "sharedPin": "1234",
   "pinSessionHours": 12,
   "tablesInside": 7,
-  "tablesOutside": 13
+  "tablesOutside": 13,
+  "timezone": "Europe/Rome"
 }

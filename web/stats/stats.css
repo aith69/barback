@@ -1,0 +1,15 @@
+main { max-width: 56rem; }
+.controls { display: grid; gap: .6rem; margin: .5rem 0 1rem; }
+.presets { display: flex; gap: .4rem; flex-wrap: wrap; }
+.presets button, .range button, .export { font: inherit; padding: .45rem .8rem; border: 1px solid currentColor; border-radius: .5rem; background: Canvas; color: CanvasText; cursor: pointer; text-decoration: none; font-size: .95rem; }
+.range { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+.range input, .range select { font: inherit; padding: .4rem; min-width: 0; }
+section { margin: 1.5rem 0; }
+section h2 { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; font-size: 1.15rem; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .45rem .6rem; border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent); text-align: right; white-space: nowrap; }
+th.text, td.text { text-align: left; white-space: normal; }
+tfoot td { font-weight: 700; }
+.muted { opacity: .6; }
+.hint { opacity: .7; font-size: .9rem; }
