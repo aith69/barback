@@ -2,5 +2,6 @@
   "language": "it",
   "port": 3000,
   "maxTables": 20,
-  "sharedPin": "change-me"
+  "sharedPin": "1234",
+  "pinSessionHours": 12
 }

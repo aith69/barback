@@ -2,6 +2,7 @@ import { loadI18n, t } from '/shared/i18n.js';
 import { api } from '/shared/api.js';
 import { h } from '/shared/dom.js';
 import { onLive } from '/shared/live.js';
+import { requirePin } from '/shared/pin.js';
 import { currencySymbol, formatDecimal, formatMoney, parseMoney } from '/shared/money.js';
 
 const app = document.getElementById('app');
@@ -11,6 +12,7 @@ let symbol = '€';
 let operators = [];
 let operator = null;
 let stop = null; // stops the live updates of the current view
+let generation = 0; // changes at every navigation: lets a slow PIN prompt notice it is stale
 
 const money = (cents) => formatMoney(cents, language, currency);
 const fill = (el, ...children) => el.replaceChildren(...children.flat().filter(Boolean));
@@ -85,6 +87,11 @@ async function showQueue() {
 
 // --- cash: open tables ---
 async function showCash() {
+  const gen = generation;
+  const pinBox = h('div');
+  fill(app, header('cash'), pinBox);
+  try { await requirePin(pinBox); } catch { fill(app, h('p', {}, t('common.error'))); return; }
+  if (gen !== generation) return; // navigated away while the PIN form was open
   const me = (stop = onLive(() => draw().catch(() => {})));
   const draw = async () => {
     // only tables with nothing left to prepare (empty ones stay, so they can be closed)
@@ -104,6 +111,13 @@ async function showCash() {
 
 // --- cash: one table ---
 async function showCashTable(number) {
+  const gen = generation;
+  const pinBox = h('div');
+  fill(app,
+    h('div', { class: 'topbar' }, h('a', { href: '#/cash' }, `← ${t('common.back')}`), h('h2', {}, t('table.title', { number }))),
+    pinBox);
+  try { await requirePin(pinBox); } catch { fill(app, h('p', {}, t('common.error'))); return; }
+  if (gen !== generation) return; // navigated away while the PIN form was open
   const me = (stop = onLive(() => load().catch(() => {})));
   let order = null;
   let touched = false; // the amount paid was edited by hand: do not overwrite it on refresh
@@ -177,6 +191,7 @@ async function showCashTable(number) {
 
 // --- routing ---
 function route() {
+  generation += 1;
   if (stop) stop();
   stop = null;
   if (!operator) return showWho();

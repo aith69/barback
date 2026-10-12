@@ -1,8 +1,9 @@
 import Fastify from 'fastify';
 import { EventEmitter } from 'node:events';
+import { createAuth } from './modules/auth/session.js';
 import fastifyStatic from '@fastify/static';
 import path from 'node:path';
-import { root } from './config.js';
+import { defaults, root } from './config.js';
 import { openDb } from './db/index.js';
 import { createI18n, loadLocales } from './i18n/index.js';
 import { modules, isEnabled } from './modules/index.js';
@@ -24,8 +25,20 @@ export async function buildApp(config, { logger = false } = {}) {
   const events = new EventEmitter();
   events.setMaxListeners(100);
   app.decorate('events', events);
+
+  // The shared PIN protects the cash register, admin and statistics (see modules/auth).
+  const auth = createAuth(config);
+  app.decorate('auth', auth);
+  if (auth.enabled && String(config.sharedPin) === defaults.sharedPin) {
+    app.log.warn('sharedPin is still the default: set your own in config.local.json');
+  }
+  app.addHook('onRequest', async (req, reply) => {
+    if (!auth.enabled || !auth.needsPin(req.method, req.routeOptions?.url ?? '')) return;
+    if (auth.isValid(auth.readToken(req))) return;
+    return reply.code(401).send({ statusCode: 401, error: 'Unauthorized', message: 'pin required' });
+  });
   app.addHook('onResponse', async (req, reply) => {
-    if (req.method !== 'GET' && req.method !== 'HEAD' && reply.statusCode < 400 && req.url.startsWith('/api/')) {
+    if (req.method !== 'GET' && req.method !== 'HEAD' && reply.statusCode < 400 && req.url.startsWith('/api/') && !req.url.startsWith('/api/auth/')) {
       app.events.emit('change', { type: 'change' });
     }
   });

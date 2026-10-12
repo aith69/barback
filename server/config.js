@@ -11,7 +11,8 @@ export const defaults = {
   currency: 'EUR',
   dbPath: 'data/barback.db',
   maxTables: 20,
-  sharedPin: '1234', // shared PIN for counter/admin/stats: change it in config.local.json
+  sharedPin: '1234', // shared PIN for cash, admin and stats (digits): change it in config.local.json; '' turns the PIN off
+  pinSessionHours: 12, // how long an unlocked session lasts
   modules: {}, // optional modules, e.g. { "customer": true } in the future
 };
 

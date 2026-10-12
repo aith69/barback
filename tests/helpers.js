@@ -1,7 +1,7 @@
 import { buildApp } from '../server/app.js';
 import { defaults } from '../server/config.js';
 
-export const makeApp = (extra = {}) => buildApp({ ...defaults, dbPath: ':memory:', ...extra });
+export const makeApp = (extra = {}) => buildApp({ ...defaults, dbPath: ':memory:', sharedPin: '', ...extra });
 
 // Calls the API in-process: { status, body }
 export async function call(app, method, url, payload) {

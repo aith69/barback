@@ -70,5 +70,9 @@
   "waiter.unserve": "Undo served",
   "line.status.served": "Served",
   "common.home": "Home",
-  "waiter.confirmLeave": "You have items that were not sent yet. Leave and discard them?"
+  "waiter.confirmLeave": "You have items that were not sent yet. Leave and discard them?",
+  "pin.title": "Enter PIN",
+  "pin.unlock": "Unlock",
+  "pin.wrong": "Wrong PIN",
+  "pin.locked": "Too many attempts. Wait a minute."
 }

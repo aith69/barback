@@ -1,6 +1,7 @@
 import { loadI18n, t } from '/shared/i18n.js';
 import { api } from '/shared/api.js';
 import { h } from '/shared/dom.js';
+import { requirePin } from '/shared/pin.js';
 import { currencySymbol, formatDecimal, parseMoney } from '/shared/money.js';
 
 const app = document.getElementById('app');
@@ -136,6 +137,7 @@ function render() {
 
 try {
   language = (await loadI18n()).language;
+  await requirePin(app);
   symbol = currencySymbol(language, (await api('GET', '/api/config')).currency);
   await refresh();
 } catch {

@@ -70,5 +70,9 @@
   "waiter.unserve": "Annulla servito",
   "line.status.served": "Servito",
   "common.home": "Home",
-  "waiter.confirmLeave": "Hai prodotti non ancora inviati. Uscire e scartarli?"
+  "waiter.confirmLeave": "Hai prodotti non ancora inviati. Uscire e scartarli?",
+  "pin.title": "Inserisci il PIN",
+  "pin.unlock": "Sblocca",
+  "pin.wrong": "PIN errato",
+  "pin.locked": "Troppi tentativi. Riprova tra un minuto."
 }
