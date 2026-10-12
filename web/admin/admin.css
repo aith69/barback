@@ -14,3 +14,4 @@ main { max-width: 48rem; }
 .add { display: flex; gap: .4rem; flex-wrap: wrap; margin: .5rem 0; }
 input[type=text] { font: inherit; padding: .3rem .4rem; }
 button { font: inherit; padding: .3rem .7rem; }
+.chip input[inputmode=decimal] { width: 4.5ch; text-align: right; }

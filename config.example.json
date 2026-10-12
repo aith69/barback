@@ -1,7 +1,8 @@
 {
   "language": "it",
   "port": 3000,
-  "maxTables": 20,
   "sharedPin": "1234",
-  "pinSessionHours": 12
+  "pinSessionHours": 12,
+  "tablesInside": 7,
+  "tablesOutside": 13
 }

@@ -76,5 +76,11 @@
   "pin.wrong": "Wrong PIN",
   "pin.locked": "Too many attempts. Wait a minute.",
   "counter.cash.preparing": "In preparation",
-  "counter.cash.markPrepared": "Mark as prepared"
+  "counter.cash.markPrepared": "Mark as prepared",
+  "waiter.custom": "Other (free text)",
+  "waiter.customPlaceholder": "What is it?",
+  "waiter.notePrice": "Extra price",
+  "waiter.priceTbd": "price to be set",
+  "counter.price": "Price",
+  "counter.error.noPrice": "Set the price of the custom items first"
 }

@@ -28,7 +28,8 @@ Use `BARBACK_CONFIG=/path/to/file.json` to load it from elsewhere.
 |---|---|---|
 | `language` | `en` | UI language (`en`, `it`, ...). Decided here, never by the browser |
 | `port` / `host` | `3000` / `0.0.0.0` | |
-| `maxTables` | `20` | Tables are numbered 1..N |
+| `tablesInside` | `7` | Tables 1..N are inside |
+| `tablesOutside` | `13` | The following tables are outside (a line separates the two groups) |
 | `sharedPin` | `1234` | Shared PIN for counter, admin and statistics. **Change it** |
 | `dbPath` | `data/barback.db` | SQLite file: copy it to back up |
 | `modules` | `{}` | Optional modules, e.g. `{ "customer": true }` (future) |

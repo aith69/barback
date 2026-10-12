@@ -44,11 +44,35 @@ function showWho() {
 // --- preparation queue ---
 const setLine = (id, status) => api('PUT', `/api/counter/lines/${id}/status`, { status });
 const setTable = (number, prepared) => api('POST', `/api/counter/tables/${number}/prepared`, { prepared });
+const setPrice = (id, cents) => api('PUT', `/api/lines/${id}/price`, { price_cents: cents });
+
+// Price of a custom item: decided at the counter or at the cash register.
+function priceForm(line, afterSave) {
+  const input = h('input', { type: 'text', inputmode: 'decimal', size: 6, placeholder: `${t('counter.price')} (${symbol})` });
+  return h('form', {
+    class: 'priceform',
+    onsubmit: async (e) => {
+      e.preventDefault();
+      const cents = parseMoney(input.value);
+      if (cents === null) { alert(t('counter.error.amount')); return; }
+      try { await setPrice(line.id, cents); } catch { alert(t('common.error')); }
+      await afterSave();
+    },
+  }, input, h('button', { type: 'submit', class: 'primary' }, t('common.save')));
+}
+
 const firstTodo = (tb) => tb.lines.find((l) => l.status === 'new');
 
 async function showQueue() {
   const me = (stop = onLive(() => draw().catch(() => {})));
-  const act = (fn) => fn().catch(() => alert(t('common.error'))).then(() => draw().catch(() => {}));
+  const act = (fn) =>
+    fn()
+      .catch((e) => alert(e.status === 409 ? t('counter.error.noPrice') : t('common.error')))
+      .then(() => draw().catch(() => {}));
+  const priceRow = (l) =>
+    h('div', { class: 'todo unpriced' },
+      h('span', {}, `${l.quantity}× ${l.item_name}`),
+      priceForm(l, () => draw().catch(() => {})));
 
   const card = (tb) => {
     const todo = tb.lines.filter((l) => l.status === 'new');
@@ -57,8 +81,8 @@ async function showQueue() {
       h('header', {},
         h('h3', {}, t('table.title', { number: tb.table })),
         h('small', {}, clock(todo[0].created_at)),
-        h('button', { type: 'button', class: 'primary', onclick: () => act(() => setTable(tb.table, true)) }, t('counter.allDone'))),
-      todo.map((l) => h('button', { type: 'button', class: 'todo', onclick: () => act(() => setLine(l.id, 'prepared')) },
+        h('button', { type: 'button', class: 'primary', disabled: todo.some((l) => l.price_pending), onclick: () => act(() => setTable(tb.table, true)) }, t('counter.allDone'))),
+      todo.map((l) => l.price_pending ? priceRow(l) : h('button', { type: 'button', class: 'todo', onclick: () => act(() => setLine(l.id, 'prepared')) },
         h('span', {}, `${l.quantity}× ${l.item_name}`), h('small', {}, notesOf(l)))),
       done.map((l) => h('button', { type: 'button', class: 'todo done', onclick: () => act(() => setLine(l.id, 'new')) },
         h('span', {}, `✓ ${l.quantity}× ${l.item_name}`), h('small', {}, notesOf(l)))));
@@ -112,11 +136,11 @@ async function showCash() {
           h('h3', {}, t('counter.cash.preparing')),
           preparing.map((tb) => h('div', { class: 'cashrow preparing' },
             h('a', { href: `#/cash/${tb.number}` }, t('table.title', { number: tb.number })),
-            h('span', {}, `⏳ ${tb.pending}`),
+            h('span', {}, `⏳ ${tb.pending}${tb.unpriced ? ` ${symbol}?` : ''}`),
             h('span', {}, money(tb.subtotal_cents)),
             h('button', {
               type: 'button',
-              onclick: () => setTable(tb.number, true).catch(() => alert(t('common.error'))).then(() => draw().catch(() => {})),
+              onclick: () => setTable(tb.number, true).catch((e) => alert(e.status === 409 ? t('counter.error.noPrice') : t('common.error'))).then(() => draw().catch(() => {})),
             }, t('counter.cash.markPrepared')))))
         : null);
   };
@@ -154,7 +178,7 @@ async function showCashTable(number) {
         type: 'button',
         class: 'primary',
         onclick: async () => {
-          try { await setTable(number, true); } catch { alert(t('common.error')); }
+          try { await setTable(number, true); } catch (e) { alert(e.status === 409 ? t('counter.error.noPrice') : t('common.error')); }
           await load().catch(() => {});
         },
       }, t('counter.cash.markPrepared'))
@@ -166,7 +190,7 @@ async function showCashTable(number) {
       ? h('ul', { class: 'lines' }, order.lines.map((l) =>
         h('li', { class: `line ${l.status}` },
           h('span', { class: 'body' }, `${l.quantity}× ${l.item_name}`, notesOf(l) ? h('small', {}, notesOf(l)) : null),
-          h('span', { class: 'side' }, money(l.quantity * l.unit_price_cents),
+          h('span', { class: 'side' }, l.price_pending ? priceForm(l, () => load().catch(() => {})) : money(l.quantity * l.unit_price_cents),
             h('button', { type: 'button', class: 'link', title: t('common.delete'), onclick: () => removeLine(l) }, '✕')))))
       : h('p', { class: 'muted' }, t('waiter.empty')));
   }
@@ -178,7 +202,7 @@ async function showCashTable(number) {
     order = res.order;
     drawLines();
     drawPrepare();
-    totalEl.textContent = `${t('table.total')}: ${money(subtotal())}`;
+    totalEl.textContent = `${t('table.total')}: ${money(subtotal())}${order.unpriced ? ' + ?' : ''}`;
     if (!touched) input.value = formatDecimal(subtotal(), language);
     syncAdjustment();
   }
@@ -190,6 +214,7 @@ async function showCashTable(number) {
   }
 
   async function close() {
+    if (order.unpriced) { alert(t('counter.error.noPrice')); return; }
     const cents = parseMoney(input.value);
     if (cents === null) { alert(t('counter.error.amount')); return; }
     if (!confirm(t('counter.cash.confirmClose', { number, amount: money(cents) }))) return;
