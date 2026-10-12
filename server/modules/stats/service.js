@@ -16,6 +16,15 @@ export function isDate(s) {
   return !Number.isNaN(ms) && new Date(ms).toISOString().slice(0, 10) === s;
 }
 
+// Adds `quantity` units (and their extra charge) to the entry of `map` with that name, ignoring case.
+function bump(map, name, quantity, cents) {
+  const key = name.toLowerCase();
+  const r = map.get(key) ?? { name, quantity: 0, revenue_cents: 0 };
+  r.quantity += quantity;
+  r.revenue_cents += quantity * cents;
+  map.set(key, r);
+}
+
 export function createStatsService(db, { timezone }) {
   const format = (options) => {
     try {
@@ -54,8 +63,8 @@ export function createStatsService(db, { timezone }) {
        ORDER BY o.closed_at`,
     ),
     lines: db.prepare(
-      `SELECT l.item_name, l.quantity, l.unit_price_cents, i.id AS item_id, i.name AS current_name, i.is_custom,
-              c.name AS category, o.closed_at
+      `SELECT l.id, l.item_name, l.quantity, l.unit_price_cents, l.note, l.note_price_cents,
+              i.id AS item_id, i.name AS current_name, i.is_custom, c.name AS category, o.closed_at
        FROM order_lines l
        JOIN orders o ON o.id = l.order_id
        JOIN items i ON i.id = l.item_id
@@ -63,11 +72,10 @@ export function createStatsService(db, { timezone }) {
        WHERE o.status = 'closed' AND l.removed_at IS NULL AND o.closed_at >= ? AND o.closed_at < ?`,
     ),
     modifiers: db.prepare(
-      `SELECT m.modifier_name, m.price_cents, l.quantity, i.name AS item_name, o.closed_at
+      `SELECT m.order_line_id, m.modifier_name, m.price_cents
        FROM order_line_modifiers m
        JOIN order_lines l ON l.id = m.order_line_id
        JOIN orders o ON o.id = l.order_id
-       JOIN items i ON i.id = l.item_id
        WHERE o.status = 'closed' AND l.removed_at IS NULL AND o.closed_at >= ? AND o.closed_at < ?`,
     ),
   };
@@ -109,49 +117,40 @@ export function createStatsService(db, { timezone }) {
       return closedOrders(from, to).map((o) => ({ ...o, closed_local: localDateTime(o.closed_at) }));
     },
 
-    // Menu items, and apart the custom text-only requests (grouped by what was typed).
+    // Menu items, each with its quick variants and free-text notes (per unit, with the extra charged),
+    // and apart the custom text-only requests (grouped by what was typed).
     products(from, to) {
+      const modifiersOf = new Map();
+      for (const m of q.modifiers.all(...bounds(from, to))) {
+        const list = modifiersOf.get(m.order_line_id) ?? [];
+        list.push(m);
+        modifiersOf.set(m.order_line_id, list);
+      }
       const items = new Map();
       const custom = new Map();
       for (const l of q.lines.all(...bounds(from, to))) {
         if (!inRange(l.closed_at, from, to)) continue;
         const value = l.quantity * l.unit_price_cents;
         if (l.is_custom) {
-          const name = l.item_name.trim();
-          const r = custom.get(name.toLowerCase()) ?? { name, quantity: 0, revenue_cents: 0 };
-          r.quantity += l.quantity;
-          r.revenue_cents += value;
-          custom.set(name.toLowerCase(), r);
-        } else {
-          const r = items.get(l.item_id) ?? { item_id: l.item_id, name: l.current_name, category: l.category, quantity: 0, revenue_cents: 0 };
-          r.quantity += l.quantity;
-          r.revenue_cents += value;
-          items.set(l.item_id, r);
+          bump(custom, l.item_name.trim(), l.quantity, 0);
+          custom.get(l.item_name.trim().toLowerCase()).revenue_cents += value;
+          continue;
         }
+        const r = items.get(l.item_id) ?? {
+          item_id: l.item_id, name: l.current_name, category: l.category, quantity: 0, revenue_cents: 0,
+          variants: new Map(), notes: new Map(),
+        };
+        r.quantity += l.quantity;
+        r.revenue_cents += value;
+        for (const m of modifiersOf.get(l.id) ?? []) bump(r.variants, m.modifier_name, l.quantity, m.price_cents);
+        const note = (l.note ?? '').trim();
+        if (note) bump(r.notes, note, l.quantity, l.note_price_cents ?? 0);
+        items.set(l.item_id, r);
       }
-      return { from, to, items: [...items.values()].sort(byQuantity), custom: [...custom.values()].sort(byQuantity) };
-    },
-
-    // Quick notes only (free text is not counted), per unit, with the products they were asked on.
-    modifiers(from, to) {
-      const map = new Map();
-      for (const m of q.modifiers.all(...bounds(from, to))) {
-        if (!inRange(m.closed_at, from, to)) continue;
-        const r = map.get(m.modifier_name) ?? { name: m.modifier_name, quantity: 0, revenue_cents: 0, items: new Map() };
-        r.quantity += m.quantity;
-        r.revenue_cents += m.quantity * m.price_cents;
-        r.items.set(m.item_name, (r.items.get(m.item_name) ?? 0) + m.quantity);
-        map.set(m.modifier_name, r);
-      }
-      const modifiers = [...map.values()]
-        .map((r) => ({
-          name: r.name,
-          quantity: r.quantity,
-          revenue_cents: r.revenue_cents,
-          items: [...r.items].map(([name, quantity]) => ({ name, quantity })).sort(byQuantity),
-        }))
+      const list = [...items.values()]
+        .map((r) => ({ ...r, variants: [...r.variants.values()].sort(byQuantity), notes: [...r.notes.values()].sort(byQuantity) }))
         .sort(byQuantity);
-      return { from, to, modifiers };
+      return { from, to, items: list, custom: [...custom.values()].sort(byQuantity) };
     },
   };
 }

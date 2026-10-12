@@ -60,12 +60,49 @@ const section = (title, kind, body, extra = null) =>
     body,
     extra);
 
+const expanded = new Set(); // products left open, kept across reloads
+
+// One <tbody> per product: the head row, and under it (hidden until opened) its variants and free-text notes.
+function productsTable(items) {
+  const col = (key) => t(`stats.col.${key}`);
+  const share = (n, total) => `${n} (${Math.round((n * 100) / total)}%)`;
+  const sub = (kind, label, entry, total) =>
+    h('tr', { class: `sub ${kind}` },
+      h('td', { class: 'text' }, kind === 'note' ? `\u201c${label}\u201d` : label),
+      h('td', {}),
+      h('td', {}, share(entry.quantity, total)),
+      h('td', {}, entry.revenue_cents ? money(entry.revenue_cents) : '\u2014'));
+  const group = (x) => {
+    const details = x.variants.length + x.notes.length > 0;
+    const body = h('tbody', { class: `group${details && expanded.has(x.item_id) ? ' open' : ''}` },
+      h('tr', {
+        class: details ? 'head clickable' : 'head',
+        onclick: details ? () => {
+          body.classList.toggle('open');
+          if (body.classList.contains('open')) expanded.add(x.item_id); else expanded.delete(x.item_id);
+        } : null,
+      },
+      h('td', { class: 'text' }, h('span', { class: 'arrow' }, details ? '\u25b8' : ''), x.name),
+      h('td', { class: 'text' }, x.category),
+      h('td', {}, String(x.quantity)),
+      h('td', {}, money(x.revenue_cents))),
+      x.variants.map((v) => sub('variant', v.name, v, x.quantity)),
+      x.notes.map((n) => sub('note', n.name, n, x.quantity)));
+    return body;
+  };
+  return h('div', { class: 'tablewrap' },
+    h('table', {},
+      h('thead', {}, h('tr', {},
+        h('th', { class: 'text' }, col('name')), h('th', { class: 'text' }, col('category')),
+        h('th', {}, col('quantity')), h('th', {}, col('revenue')))),
+      items.map(group)));
+}
+
 async function load() {
   const qs = new URLSearchParams(range).toString();
-  const [revenue, products, modifiers] = await Promise.all([
+  const [revenue, products] = await Promise.all([
     api('GET', `/api/stats/revenue?${qs}`),
     api('GET', `/api/stats/products?${qs}`),
-    api('GET', `/api/stats/modifiers?${qs}`),
   ]);
   const col = (key) => t(`stats.col.${key}`);
   const totals = revenue.totals;
@@ -83,12 +120,8 @@ async function load() {
       h('p', {}, h('a', { class: 'export', href: csvUrl('orders') }, t('stats.export.orders')))),
 
     section(t('stats.section.products'), 'products',
-      products.items.length
-        ? table(
-          [col('name'), col('category'), col('quantity'), col('revenue')],
-          products.items.map((x) => [x.name, x.category, String(x.quantity), money(x.revenue_cents)]),
-          { text: [0, 1] })
-        : empty()),
+      products.items.length ? productsTable(products.items) : empty(),
+      products.items.some((x) => x.variants.length + x.notes.length) ? h('p', { class: 'hint' }, t('stats.hint.variants')) : null),
 
     products.custom.length
       ? section(t('stats.section.custom'), 'custom',
@@ -96,16 +129,6 @@ async function load() {
           [col('name'), col('quantity'), col('revenue')],
           products.custom.map((x) => [x.name, String(x.quantity), money(x.revenue_cents)])))
       : null,
-
-    section(t('stats.section.modifiers'), 'modifiers',
-      modifiers.modifiers.length
-        ? table(
-          [col('name'), col('quantity'), col('extra'), col('items')],
-          modifiers.modifiers.map((x) => [
-            x.name, String(x.quantity), money(x.revenue_cents), x.items.map((i) => `${i.name} ×${i.quantity}`).join(', '),
-          ]),
-          { text: [0, 3] })
-        : empty()),
 
     h('p', { class: 'hint' }, t('stats.note.listPrice')),
   ].filter(Boolean));
