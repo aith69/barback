@@ -106,7 +106,7 @@ test('products sold: closed orders only, variants in the value, custom requests 
   assert.deepEqual([res.custom[0].quantity, res.custom[0].revenue_cents], [3, 1200]);
 });
 
-test('quick notes requested: counted per unit, with the products they were asked on', async (t) => {
+test('variants and free-text notes are counted inside each product', async (t) => {
   const app = await makeApp();
   t.after(() => app.close());
   const s = await seed(app);
@@ -115,6 +115,7 @@ test('quick notes requested: counted per unit, with the products they were asked
   await sale(app, s, 1, [
     { item_id: s.cappuccino.id, quantity: 2, modifier_ids: [s.soy.id] },
     { item_id: s.espresso.id, quantity: 1, modifier_ids: [s.soy.id, s.decaf.id], note: 'very hot' },
+    { item_id: s.espresso.id, quantity: 2, note: ' VERY HOT ' },
   ], { closedAt });
   await sale(app, s, 2, [{ item_id: s.espresso.id, quantity: 1, note: 'free text only' }], { closedAt });
   await call(app, 'POST', '/api/tables/3/lines', {
@@ -122,9 +123,19 @@ test('quick notes requested: counted per unit, with the products they were asked
     lines: [{ item_id: s.espresso.id, quantity: 4, modifier_ids: [s.decaf.id] }], // open: not counted
   });
 
-  const { modifiers } = (await call(app, 'GET', '/api/stats/modifiers?from=2026-10-12&to=2026-10-12')).body;
-  assert.deepEqual(modifiers.map((m) => [m.name, m.quantity, m.revenue_cents]), [['Soy milk', 3, 90], ['Decaf', 1, 0]]);
-  assert.deepEqual(modifiers[0].items, [{ name: 'Cappuccino', quantity: 2 }, { name: 'Espresso', quantity: 1 }]);
+  const { items } = (await call(app, 'GET', '/api/stats/products?from=2026-10-12&to=2026-10-12')).body;
+  const espresso = items.find((x) => x.name === 'Espresso');
+  const cappuccino = items.find((x) => x.name === 'Cappuccino');
+
+  assert.deepEqual(espresso.variants.map((v) => [v.name, v.quantity, v.revenue_cents]), [['Decaf', 1, 0], ['Soy milk', 1, 30]]);
+  assert.deepEqual(espresso.notes.map((n) => [n.name.toLowerCase(), n.quantity]), [['very hot', 3], ['free text only', 1]]);
+  assert.deepEqual(cappuccino.variants.map((v) => [v.name, v.quantity, v.revenue_cents]), [['Soy milk', 2, 60]]);
+  assert.deepEqual(cappuccino.notes, []);
+
+  const csv = (await app.inject('/api/stats/export.csv?kind=products&from=2026-10-12&to=2026-10-12')).body.split('\r\n');
+  assert.ok(csv.includes('Espresso,Coffee,Variant,Soy milk,1,0.30'));
+  assert.ok(csv.some((l) => l.startsWith('Espresso,Coffee,Free text,')));
+  assert.equal((await call(app, 'GET', '/api/stats/modifiers')).status, 404); // the section is gone
 });
 
 test('CSV export follows the UI language and is safe to open in a spreadsheet', async (t) => {
@@ -171,7 +182,7 @@ test('stats: invalid ranges are refused, and the PIN protects everything', async
 
   const locked = await buildApp({ ...defaults, dbPath: ':memory:', sharedPin: '4321' });
   t.after(() => locked.close());
-  for (const url of ['/api/stats/revenue', '/api/stats/products', '/api/stats/modifiers', '/api/stats/export.csv?kind=orders']) {
+  for (const url of ['/api/stats/revenue', '/api/stats/products', '/api/stats/export.csv?kind=orders']) {
     assert.equal((await locked.inject(url)).statusCode, 401, url);
   }
   const login = await locked.inject({ method: 'POST', url: '/api/auth/login', payload: { pin: '4321' } });

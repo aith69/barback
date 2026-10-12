@@ -13,3 +13,11 @@ th.text, td.text { text-align: left; white-space: normal; }
 tfoot td { font-weight: 700; }
 .muted { opacity: .6; }
 .hint { opacity: .7; font-size: .9rem; }
+tbody.group tr.head.clickable { cursor: pointer; }
+tbody.group tr.head.clickable:hover { background: color-mix(in srgb, currentColor 7%, transparent); }
+.arrow { display: inline-block; width: 1.1em; transition: transform .15s; }
+tbody.group.open .arrow { transform: rotate(90deg); }
+tbody.group:not(.open) .sub { display: none; }
+.sub td { font-size: .9rem; opacity: .85; border-bottom-style: dashed; }
+.sub td.text { padding-left: 1.7rem; }
+.sub.note td.text { font-style: italic; }

@@ -36,11 +36,6 @@ export default async function stats(app) {
     return svc.products(from, to);
   });
 
-  app.get('/api/stats/modifiers', { schema: { querystring } }, async (req) => {
-    const { from, to } = parseRange(req.query, svc);
-    return svc.modifiers(from, to);
-  });
-
   const col = (key) => t(`stats.col.${key}`);
   function csvRows(kind, from, to, groupBy) {
     switch (kind) {
@@ -59,22 +54,19 @@ export default async function stats(app) {
             { cents: o.subtotal_cents }, { cents: o.adjustment_cents }, { cents: o.total_paid_cents },
           ]),
         ];
-      case 'products':
-        return [
-          [col('name'), col('category'), col('quantity'), col('revenue')],
-          ...svc.products(from, to).items.map((x) => [x.name, x.category, x.quantity, { cents: x.revenue_cents }]),
-        ];
-      case 'custom':
+      case 'products': {
+        const rows = [[col('name'), col('category'), col('type'), col('detail'), col('quantity'), col('revenue')]];
+        for (const x of svc.products(from, to).items) {
+          rows.push([x.name, x.category, t('stats.type.product'), '', x.quantity, { cents: x.revenue_cents }]);
+          for (const v of x.variants) rows.push([x.name, x.category, t('stats.type.variant'), v.name, v.quantity, { cents: v.revenue_cents }]);
+          for (const n of x.notes) rows.push([x.name, x.category, t('stats.type.note'), n.name, n.quantity, { cents: n.revenue_cents }]);
+        }
+        return rows;
+      }
+      default: // custom
         return [
           [col('name'), col('quantity'), col('revenue')],
           ...svc.products(from, to).custom.map((x) => [x.name, x.quantity, { cents: x.revenue_cents }]),
-        ];
-      default: // modifiers
-        return [
-          [col('name'), col('quantity'), col('extra'), col('items')],
-          ...svc.modifiers(from, to).modifiers.map((x) => [
-            x.name, x.quantity, { cents: x.revenue_cents }, x.items.map((i) => `${i.name} (${i.quantity})`).join(', '),
-          ]),
         ];
     }
   }
@@ -86,7 +78,7 @@ export default async function stats(app) {
         querystring: {
           type: 'object',
           required: ['kind'],
-          properties: { ...range, kind: { type: 'string', enum: ['revenue', 'orders', 'products', 'custom', 'modifiers'] } },
+          properties: { ...range, kind: { type: 'string', enum: ['revenue', 'orders', 'products', 'custom'] } },
         },
       },
     },

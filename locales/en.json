@@ -97,7 +97,6 @@
   "stats.section.revenue": "Revenue",
   "stats.section.products": "Products sold",
   "stats.section.custom": "Requests outside the menu",
-  "stats.section.modifiers": "Quick notes requested",
   "stats.col.period": "Period",
   "stats.col.orders": "Tables closed",
   "stats.col.subtotal": "Subtotal",
@@ -107,8 +106,6 @@
   "stats.col.category": "Category",
   "stats.col.quantity": "Quantity",
   "stats.col.revenue": "Value",
-  "stats.col.extra": "Extra charged",
-  "stats.col.items": "On products",
   "stats.col.date": "Date",
   "stats.col.table": "Table",
   "stats.col.openedBy": "Opened by",
@@ -118,5 +115,11 @@
   "stats.export": "Export CSV",
   "stats.export.orders": "Export every closed table (CSV)",
   "stats.weekOf": "Week of {date}",
-  "stats.note.listPrice": "Product values are at menu price, before discounts and rounding. \"Paid\" is what was actually collected."
+  "stats.note.listPrice": "Product values are at menu price, before discounts and rounding. \"Paid\" is what was actually collected.",
+  "stats.col.type": "Type",
+  "stats.col.detail": "Detail",
+  "stats.type.product": "Product",
+  "stats.type.variant": "Variant",
+  "stats.type.note": "Free text",
+  "stats.hint.variants": "Open a product with a click to see its variants and free-text requests: quantity (share of the product) and extra charged."
 }

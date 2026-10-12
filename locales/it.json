@@ -97,7 +97,6 @@
   "stats.section.revenue": "Incassi",
   "stats.section.products": "Prodotti venduti",
   "stats.section.custom": "Richieste fuori menù",
-  "stats.section.modifiers": "Modifiche richieste",
   "stats.col.period": "Periodo",
   "stats.col.orders": "Tavoli chiusi",
   "stats.col.subtotal": "Subtotale",
@@ -107,8 +106,6 @@
   "stats.col.category": "Categoria",
   "stats.col.quantity": "Quantità",
   "stats.col.revenue": "Valore",
-  "stats.col.extra": "Extra incassati",
-  "stats.col.items": "Sui prodotti",
   "stats.col.date": "Data",
   "stats.col.table": "Tavolo",
   "stats.col.openedBy": "Aperto da",
@@ -118,5 +115,11 @@
   "stats.export": "Esporta CSV",
   "stats.export.orders": "Esporta tutti i tavoli chiusi (CSV)",
   "stats.weekOf": "Settimana del {date}",
-  "stats.note.listPrice": "I valori dei prodotti sono a prezzo di listino, prima di sconti e arrotondamenti. \"Incassato\" è quanto è stato realmente incassato."
+  "stats.note.listPrice": "I valori dei prodotti sono a prezzo di listino, prima di sconti e arrotondamenti. \"Incassato\" è quanto è stato realmente incassato.",
+  "stats.col.type": "Tipo",
+  "stats.col.detail": "Dettaglio",
+  "stats.type.product": "Prodotto",
+  "stats.type.variant": "Variante",
+  "stats.type.note": "Testo libero",
+  "stats.hint.variants": "Clicca su un prodotto per vedere le sue varianti e le richieste in testo libero: quantità (quota sul prodotto) ed extra incassato."
 }
