@@ -1,7 +1,7 @@
 import { loadI18n, t } from '/shared/i18n.js';
 import { api } from '/shared/api.js';
 import { h } from '/shared/dom.js';
-import { formatMoney } from '/shared/money.js';
+import { currencySymbol, formatDecimal, formatMoney, parseMoney } from '/shared/money.js';
 import { onLive } from '/shared/live.js';
 
 const app = document.getElementById('app');
@@ -16,6 +16,11 @@ let unsent = () => 0; // set by the table page: how many lines are waiting to be
 const money = (cents) => formatMoney(cents, language, currency);
 const fill = (el, ...children) => el.replaceChildren(...children.flat().filter(Boolean));
 const findItem = (id) => menu.categories.flatMap((c) => c.items).find((i) => i.id === id);
+// Price per unit of a line not sent yet: item + quick notes + free-text note.
+const draftUnit = (d) =>
+  d.item.price_cents +
+  d.item.modifiers.filter((m) => d.modifier_ids.includes(m.id)).reduce((sum, m) => sum + (m.price_cents ?? 0), 0) +
+  (d.note ? (d.note_price_cents ?? 0) : 0);
 const noteNames = (item, ids) => item.modifiers.filter((m) => ids.includes(m.id)).map((m) => m.name).join(', ');
 
 const savedOperator = {
@@ -58,6 +63,16 @@ function readyList(tables, onChange) {
       h('button', { type: 'button', class: 'primary', onclick: () => setServed(tb.number, true).then(onChange) }, t('waiter.served')))));
 }
 
+// The table list with a separator entry between the inside tables and the outside ones.
+function withSeparator(tables) {
+  const out = [];
+  tables.forEach((tb, i) => {
+    if (i > 0 && tb.area !== tables[i - 1].area) out.push({ separator: true });
+    out.push(tb);
+  });
+  return out;
+}
+
 // --- table grid ---
 async function showGrid() {
   const me = (timer = onLive(() => draw().catch(() => {})));
@@ -65,7 +80,7 @@ async function showGrid() {
     const tables = await api('GET', '/api/tables');
     if (timer !== me) return; // navigated away meanwhile
     fill(app, topbar(h('h2', {}, t('waiter.tables'))),
-      h('div', { class: 'grid' }, tables.map((tb) =>
+      h('div', { class: 'grid' }, withSeparator(tables).map((tb) => tb.separator ? h('hr', { class: 'sep' }) :
         h('a', { href: `#/table/${tb.number}`, class: tb.occupied ? 'table on' : 'table' },
           h('strong', {}, String(tb.number)),
           h('small', {}, tb.pending ? `⏳ ${tb.pending}` : tb.to_serve ? '✓' : '')))),
@@ -75,12 +90,26 @@ async function showGrid() {
 }
 
 // --- line editor (quantity, quick notes, free text) ---
-function openEditor({ title, item, quantity = 1, selected = [], note = '', extraNotes = [], onSave, onRemove }) {
+function openEditor({ title, item, quantity = 1, selected = [], note = '', notePrice = 0, extraNotes = [], askName = false, onSave, onRemove }) {
+  // askName: a custom item, the text field is its name.
+  // Otherwise the text field is a free-text note, with an optional extra price.
   let qty = quantity;
   const chosen = new Set(selected);
   const available = [...item.modifiers, ...extraNotes.filter((m) => !item.modifiers.some((x) => x.id === m.id))];
   const qtyEl = h('strong', {}, String(qty));
-  const noteInput = h('input', { type: 'text', maxlength: 200, value: note, placeholder: t('waiter.notePlaceholder') });
+  const textInput = h('input', {
+    type: 'text',
+    maxlength: askName ? 80 : 200,
+    value: note,
+    placeholder: t(askName ? 'waiter.customPlaceholder' : 'waiter.notePlaceholder'),
+  });
+  const priceInput = askName ? null : h('input', {
+    type: 'text',
+    inputmode: 'decimal',
+    class: 'extra',
+    value: notePrice ? formatDecimal(notePrice, language) : '',
+    placeholder: `${t('waiter.notePrice')} (${currencySymbol(language, currency)})`,
+  });
   const dlg = h('dialog', { class: 'editor' });
   dlg.addEventListener('close', () => dlg.remove());
   dlg.append(...[
@@ -93,15 +122,23 @@ function openEditor({ title, item, quantity = 1, selected = [], note = '', extra
       ? h('div', { class: 'mods' }, available.map((m) =>
         h('label', { class: 'check' },
           h('input', { type: 'checkbox', checked: chosen.has(m.id), onchange: (e) => (e.target.checked ? chosen.add(m.id) : chosen.delete(m.id)) }),
-          m.name)))
+          m.price_cents ? `${m.name} (+${money(m.price_cents)})` : m.name)))
       : null,
-    noteInput,
+    textInput,
+    priceInput,
     h('div', { class: 'actions' },
       onRemove ? h('button', { type: 'button', class: 'danger', onclick: () => { dlg.close(); onRemove(); } }, t('common.delete')) : null,
       h('button', { type: 'button', onclick: () => dlg.close() }, t('common.cancel')),
       h('button', { type: 'button', class: 'primary', onclick: () => {
+        const text = textInput.value.trim();
+        if (askName && !text) { textInput.focus(); return; }
+        let extra = 0;
+        if (priceInput && text && priceInput.value.trim() !== '') {
+          extra = parseMoney(priceInput.value);
+          if (extra === null) { alert(t('admin.error.price')); return; }
+        }
         dlg.close();
-        onSave({ quantity: qty, modifier_ids: [...chosen], note: noteInput.value.trim() });
+        onSave({ quantity: qty, modifier_ids: [...chosen], note: text, note_price_cents: extra, name: text });
       } }, t('common.save'))),
   ].filter(Boolean));
   document.body.append(dlg);
@@ -152,6 +189,7 @@ async function showTable(number, fromCash = false) {
       quantity: l.quantity,
       selected: l.modifiers.map((m) => m.id),
       note: l.note ?? '',
+      notePrice: l.note_price_cents ?? 0,
       extraNotes: l.modifiers,
       onSave: (v) => mutate(() => api('PATCH', `/api/lines/${l.id}`, { operator_id: operator.id, ...v })),
       onRemove: () => {
@@ -182,10 +220,10 @@ async function showTable(number, fromCash = false) {
               `${l.quantity}× ${l.item_name}`,
               l.modifiers.length ? h('small', {}, l.modifiers.map((m) => m.name).join(', ')) : null,
               l.note ? h('small', {}, `“${l.note}”`) : null),
-            h('span', { class: 'side' }, money(l.quantity * l.unit_price_cents),
+            h('span', { class: 'side' }, l.price_pending ? t('waiter.priceTbd') : money(l.quantity * l.unit_price_cents),
               h('span', { class: 'status' }, t(`line.status.${l.served_at ? 'served' : l.status}`))))))
         : h('p', { class: 'muted' }, t('waiter.empty')),
-      order && lines.length ? h('p', { class: 'total' }, `${t('table.total')}: ${money(order.subtotal_cents)}`) : null,
+      order && lines.length ? h('p', { class: 'total' }, `${t('table.total')}: ${money(order.subtotal_cents)}${order.unpriced ? ' + ?' : ''}`) : null,
       serveButton(lines));
   }
 
@@ -198,26 +236,46 @@ async function showTable(number, fromCash = false) {
 
   function editDraft(index) {
     const d = draft[index];
+    const remove = () => { draft.splice(index, 1); drawDraft(); };
+    if (d.item.custom) {
+      openEditor({
+        title: t('waiter.custom'),
+        item: d.item,
+        quantity: d.quantity,
+        note: d.item.name,
+        askName: true,
+        onSave: (v) => { d.quantity = v.quantity; d.item.name = v.name; drawDraft(); },
+        onRemove: remove,
+      });
+      return;
+    }
     openEditor({
       title: d.item.name,
       item: d.item,
       quantity: d.quantity,
       selected: d.modifier_ids,
       note: d.note,
-      onSave: (v) => { Object.assign(d, v); drawDraft(); },
-      onRemove: () => { draft.splice(index, 1); drawDraft(); },
+      notePrice: d.note_price_cents ?? 0,
+      onSave: (v) => {
+        Object.assign(d, { quantity: v.quantity, modifier_ids: v.modifier_ids, note: v.note, note_price_cents: v.note_price_cents });
+        drawDraft();
+      },
+      onRemove: remove,
     });
   }
 
   async function send() {
     if (sending) return;
     sending = true;
-    const lines = draft.map((d) => ({
-      item_id: d.item.id,
-      quantity: d.quantity,
-      note: d.note || undefined,
-      modifier_ids: d.modifier_ids,
-    }));
+    const lines = draft.map((d) => (d.item.custom
+      ? { custom_name: d.item.name, quantity: d.quantity }
+      : {
+        item_id: d.item.id,
+        quantity: d.quantity,
+        note: d.note || undefined,
+        note_price_cents: d.note ? (d.note_price_cents ?? 0) : 0,
+        modifier_ids: d.modifier_ids,
+      }));
     try {
       order = (await api('POST', `/api/tables/${number}/lines`, { operator_id: operator.id, lines })).order;
       draft.length = 0;
@@ -242,10 +300,29 @@ async function showTable(number, fromCash = false) {
               `${d.quantity}× ${d.item.name}`,
               d.modifier_ids.length ? h('small', {}, noteNames(d.item, d.modifier_ids)) : null,
               d.note ? h('small', {}, `“${d.note}”`) : null),
-            h('span', { class: 'side' }, money(d.quantity * d.item.price_cents))))),
+            h('span', { class: 'side' }, d.item.custom ? '?' : money(d.quantity * draftUnit(d)))))),
         h('button', { type: 'button', class: 'primary send', onclick: send },
           `${t('waiter.send')} (${draft.reduce((n, d) => n + d.quantity, 0)})`))
       : null);
+  }
+
+  // Text-only item: the price is decided later, at the counter or at the cash register.
+  function addCustom() {
+    openEditor({
+      title: t('waiter.custom'),
+      item: { modifiers: [] },
+      askName: true,
+      onSave: (v) => {
+        draft.push({
+          item: { id: null, custom: true, name: v.name, price_cents: 0, modifiers: [] },
+          quantity: v.quantity,
+          modifier_ids: [],
+          note: '',
+          note_price_cents: 0,
+        });
+        drawDraft();
+      },
+    });
   }
 
   function drawPicker() {
@@ -257,7 +334,8 @@ async function showTable(number, fromCash = false) {
       h('div', { class: 'items' }, category.items.map((i) =>
         h('button', { type: 'button', class: 'item', disabled: i.sold_out, onclick: () => addToDraft(i) },
           h('span', {}, i.name),
-          h('small', {}, i.sold_out ? t('item.soldOut') : money(i.price_cents))))));
+          h('small', {}, i.sold_out ? t('item.soldOut') : money(i.price_cents)))),
+        h('button', { type: 'button', class: 'item custom', onclick: addCustom }, h('span', {}, `+ ${t('waiter.custom')}`))));
   }
 
   try {

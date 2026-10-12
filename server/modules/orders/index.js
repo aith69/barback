@@ -6,11 +6,20 @@ const operatorId = { type: 'integer' };
 const quantity = { type: 'integer', minimum: 1, maximum: 99 };
 const note = { type: 'string', maxLength: 200 };
 const noteIds = { type: 'array', items: { type: 'integer' }, maxItems: 20 };
+const cents = { type: 'integer', minimum: 0, maximum: 1000000 };
 
+// A line is a catalog item (item_id) or a custom text-only item (custom_name).
 const newLine = {
   type: 'object',
-  required: ['item_id', 'quantity'],
-  properties: { item_id: { type: 'integer' }, quantity, note, modifier_ids: noteIds },
+  required: ['quantity'],
+  properties: {
+    item_id: { type: 'integer' },
+    custom_name: { type: 'string', maxLength: 80 },
+    quantity,
+    note,
+    note_price_cents: cents,
+    modifier_ids: noteIds,
+  },
 };
 
 export default async function orders(app) {
@@ -44,7 +53,7 @@ export default async function orders(app) {
         body: {
           type: 'object',
           required: ['operator_id'],
-          properties: { operator_id: operatorId, quantity, note, modifier_ids: noteIds },
+          properties: { operator_id: operatorId, quantity, note, note_price_cents: cents, modifier_ids: noteIds },
         },
       },
     },
@@ -52,6 +61,18 @@ export default async function orders(app) {
       const { operator_id, ...changes } = req.body;
       return svc.updateLine(req.params.id, operator_id, changes);
     },
+  );
+
+  // Price of a custom item, set at the counter or at the cash register.
+  app.put(
+    '/api/lines/:id/price',
+    {
+      schema: {
+        params: idParams,
+        body: { type: 'object', required: ['price_cents'], properties: { price_cents: cents } },
+      },
+    },
+    async (req) => svc.setPrice(req.params.id, req.body.price_cents),
   );
 
   app.delete(

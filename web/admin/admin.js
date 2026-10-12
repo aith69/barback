@@ -45,7 +45,7 @@ const check = (label, checked, onToggle) =>
 function addForm(placeholder, onAdd, withPrice = false) {
   const name = h('input', { type: 'text', placeholder, maxlength: 80, required: true });
   const price = withPrice
-    ? h('input', { type: 'text', inputmode: 'decimal', placeholder: `${t('admin.item.price')} (${symbol})`, size: 8, required: true })
+    ? h('input', { type: 'text', inputmode: 'decimal', placeholder: `${t('admin.item.price')} (${symbol})`, size: 8, required: withPrice !== 'optional' })
     : null;
   return h('form', {
     class: 'add',
@@ -71,8 +71,21 @@ function notes(list, owner) {
   return h('div', { class: 'notes' },
     list.map((m) => h('span', { class: 'chip' },
       nameInput(m.name, (v) => patch('modifiers', m.id, { name: v })),
+      h('input', { type: 'text', inputmode: 'decimal', size: 4, title: t('admin.item.price'), value: formatDecimal(m.price_cents, language), onchange: (e) => notePrice(m, e) }),
       h('button', { type: 'button', title: t('common.delete'), onclick: () => remove('modifiers', m.id, m.name) }, '✕'))),
-    addForm(t('admin.notes.add'), (name) => act(() => api('POST', '/api/admin/modifiers', { ...owner, name }))));
+    addForm(t('admin.notes.add'), (name, price) => addNote(owner, name, price), 'optional'));
+}
+
+function addNote(owner, name, priceText) {
+  const price_cents = priceText.trim() === '' ? 0 : parseMoney(priceText);
+  if (price_cents === null) { alert(t('admin.error.price')); return; }
+  return act(() => api('POST', '/api/admin/modifiers', { ...owner, name, price_cents }));
+}
+
+function notePrice(m, e) {
+  const text = e.target.value.trim();
+  const cents = text === '' ? 0 : parseMoney(text);
+  if (cents === null) { alert(t('admin.error.price')); refresh(); } else patch('modifiers', m.id, { price_cents: cents });
 }
 
 function addItem(categoryId, name, priceText) {

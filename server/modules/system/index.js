@@ -5,7 +5,8 @@ export default async function system(app) {
   app.get('/api/config', async () => ({
     language: app.i18n.language,
     currency: app.config.currency,
-    maxTables: app.config.maxTables,
+    maxTables: app.config.tablesInside + app.config.tablesOutside,
+    tablesInside: app.config.tablesInside,
     modules: app.config.modules,
   }));
 

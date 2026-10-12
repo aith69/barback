@@ -76,5 +76,11 @@
   "pin.wrong": "PIN errato",
   "pin.locked": "Troppi tentativi. Riprova tra un minuto.",
   "counter.cash.preparing": "In preparazione",
-  "counter.cash.markPrepared": "Segna preparato"
+  "counter.cash.markPrepared": "Segna preparato",
+  "waiter.custom": "Altro (testo libero)",
+  "waiter.customPlaceholder": "Cosa serve?",
+  "waiter.notePrice": "Supplemento",
+  "waiter.priceTbd": "prezzo da definire",
+  "counter.price": "Prezzo",
+  "counter.error.noPrice": "Prima imposta il prezzo dei prodotti personalizzati"
 }
