@@ -4,6 +4,10 @@ import { h } from '/shared/dom.js';
 
 let unlocked = false;
 
+// A text field shows the numeric keypad on every phone (password fields often do not).
+// The digits are masked by CSS; if the browser cannot, fall back to a password field.
+const canMask = typeof CSS !== 'undefined' && CSS.supports('-webkit-text-security', 'disc');
+
 // Resolves once this browser has a PIN session. If not, shows the PIN form inside `container`.
 export async function requirePin(container) {
   if (unlocked) return;
@@ -12,7 +16,18 @@ export async function requirePin(container) {
     return;
   }
   await new Promise((resolve) => {
-    const input = h('input', { type: 'password', inputmode: 'numeric', autocomplete: 'off', maxlength: 64, required: true });
+    const input = h('input', {
+      type: canMask ? 'text' : 'password',
+      class: canMask ? 'masked' : '',
+      inputmode: 'numeric',
+      pattern: '[0-9]*',
+      enterkeyhint: 'go',
+      autocomplete: 'off',
+      autocapitalize: 'off',
+      spellcheck: 'false',
+      maxlength: 64,
+      required: true,
+    });
     const message = h('p', { class: 'error' });
     const form = h('form', {
       class: 'pin',
