@@ -94,8 +94,10 @@ async function showCash() {
   if (gen !== generation) return; // navigated away while the PIN form was open
   const me = (stop = onLive(() => draw().catch(() => {})));
   const draw = async () => {
-    // only tables with nothing left to prepare (empty ones stay, so they can be closed)
-    const tables = (await api('GET', '/api/counter/tables')).filter((tb) => !tb.pending);
+    const all = await api('GET', '/api/counter/tables');
+    // ready for payment: nothing left to prepare (empty ones stay, so they can be closed)
+    const tables = all.filter((tb) => !tb.pending);
+    const preparing = all.filter((tb) => tb.pending);
     if (stop !== me) return;
     fill(app, header('cash'),
       tables.length
@@ -104,7 +106,19 @@ async function showCash() {
             h('strong', {}, t('table.title', { number: tb.number })),
             h('span', {}, tb.lines ? '✓' : ''),
             h('span', {}, money(tb.subtotal_cents)))))
-        : h('p', { class: 'muted' }, t('counter.cash.empty')));
+        : h('p', { class: 'muted' }, t('counter.cash.empty')),
+      preparing.length
+        ? h('div', { class: 'cash' },
+          h('h3', {}, t('counter.cash.preparing')),
+          preparing.map((tb) => h('div', { class: 'cashrow preparing' },
+            h('a', { href: `#/cash/${tb.number}` }, t('table.title', { number: tb.number })),
+            h('span', {}, `⏳ ${tb.pending}`),
+            h('span', {}, money(tb.subtotal_cents)),
+            h('button', {
+              type: 'button',
+              onclick: () => setTable(tb.number, true).catch(() => alert(t('common.error'))).then(() => draw().catch(() => {})),
+            }, t('counter.cash.markPrepared')))))
+        : null);
   };
   try { await draw(); } catch { fill(app, h('p', {}, t('common.error'))); }
 }
@@ -123,6 +137,7 @@ async function showCashTable(number) {
   let touched = false; // the amount paid was edited by hand: do not overwrite it on refresh
   const subtotal = () => (order ? order.subtotal_cents : 0);
   const linesBox = h('div');
+  const prepareBox = h('div');
   const totalEl = h('p', { class: 'total' });
   const adjustEl = h('p', { class: 'adjust' });
   const input = h('input', { type: 'text', inputmode: 'decimal', oninput: () => { touched = true; syncAdjustment(); } });
@@ -130,6 +145,20 @@ async function showCashTable(number) {
   function syncAdjustment() {
     const cents = parseMoney(input.value);
     adjustEl.textContent = cents === null ? '' : `${t('counter.cash.adjustment')}: ${money(cents - subtotal())}`;
+  }
+
+  function drawPrepare() {
+    const pending = order.lines.some((l) => l.status === 'new');
+    fill(prepareBox, pending
+      ? h('button', {
+        type: 'button',
+        class: 'primary',
+        onclick: async () => {
+          try { await setTable(number, true); } catch { alert(t('common.error')); }
+          await load().catch(() => {});
+        },
+      }, t('counter.cash.markPrepared'))
+      : null);
   }
 
   function drawLines() {
@@ -148,6 +177,7 @@ async function showCashTable(number) {
     if (!res.order) { location.hash = '#/cash'; return; } // closed from another device
     order = res.order;
     drawLines();
+    drawPrepare();
     totalEl.textContent = `${t('table.total')}: ${money(subtotal())}`;
     if (!touched) input.value = formatDecimal(subtotal(), language);
     syncAdjustment();
@@ -174,7 +204,8 @@ async function showCashTable(number) {
   fill(app,
     h('div', { class: 'topbar' }, h('a', { href: '#/cash' }, `← ${t('common.back')}`), h('h2', {}, t('table.title', { number }))),
     linesBox,
-    h('p', {}, h('a', { href: `/waiter/#/table/${number}` }, t('counter.cash.addItems'))),
+    prepareBox,
+    h('p', {}, h('a', { href: `/waiter/#/table/${number}/cash` }, t('counter.cash.addItems'))),
     totalEl,
     h('label', { class: 'pay' }, t('counter.cash.paid'), input, symbol),
     adjustEl,

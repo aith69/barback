@@ -109,7 +109,7 @@ function openEditor({ title, item, quantity = 1, selected = [], note = '', extra
 }
 
 // --- table page ---
-async function showTable(number) {
+async function showTable(number, fromCash = false) {
   const me = (timer = onLive(() => load().catch(() => {})));
   let order = null;
   let categoryId = null;
@@ -121,8 +121,11 @@ async function showTable(number) {
   const picker = h('div');
 
   fill(app,
-    topbar(h('a', { href: '#/' }, `← ${t('common.back')}`), h('h2', {}, t('table.title', { number }))),
-    existing, drafts, picker);
+    topbar(h('a', {
+      href: fromCash ? `/counter/#/cash/${number}` : '#/',
+      onclick: (e) => { if (fromCash && !leaveOk()) e.preventDefault(); },
+    }, `← ${t('common.back')}`), h('h2', {}, t('table.title', { number }))),
+    existing, picker, drafts);
 
   async function load() {
     const res = await api('GET', `/api/tables/${number}`);
@@ -218,6 +221,7 @@ async function showTable(number) {
     try {
       order = (await api('POST', `/api/tables/${number}/lines`, { operator_id: operator.id, lines })).order;
       draft.length = 0;
+      if (fromCash) { location.href = `/counter/#/cash/${number}`; return; } // back to the cash register
       drawDraft();
       drawExisting();
     } catch (e) {
@@ -288,8 +292,8 @@ function route() {
   unsent = () => 0;
   timer = null;
   if (!operator) return showWho();
-  const match = location.hash.match(/^#\/table\/(\d+)$/);
-  return match ? showTable(Number(match[1])) : showGrid();
+  const match = location.hash.match(/^#\/table\/(\d+)(\/cash)?$/);
+  return match ? showTable(Number(match[1]), Boolean(match[2])) : showGrid();
 }
 
 try {
