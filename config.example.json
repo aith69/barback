@@ -1,9 +1,11 @@
 {
   "language": "it",
   "port": 3000,
-  "sharedPin": "1234",
-  "pinSessionHours": 12,
   "tablesInside": 7,
   "tablesOutside": 13,
-  "timezone": "Europe/Rome"
+  "timezone": "Europe/Rome",
+  "sharedPin": "change-me",
+  "pinSessionHours": 12,
+  "backupHour": 4,
+  "backupKeep": 14
 }

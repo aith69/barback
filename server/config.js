@@ -11,6 +11,9 @@ export const defaults = {
   currency: 'EUR',
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, // splits the sales in days: set it in config.local.json, e.g. "Europe/Rome"
   dbPath: 'data/barback.db',
+  backupDir: 'data/backups', // daily copies of the database
+  backupKeep: 14, // how many copies to keep; 0 turns the automatic backup off
+  backupHour: 4, // local hour (see timezone) after which the daily copy is made
   tablesInside: 7, // tables 1..N are inside
   tablesOutside: 13, // the following ones are outside: a line separates the two groups
   maxTables: 20, // total (inside + outside), always recomputed from the two above
@@ -41,5 +44,6 @@ export function loadConfig(overrides = {}) {
   if (cfg.dbPath !== ':memory:' && !path.isAbsolute(cfg.dbPath)) {
     cfg.dbPath = path.join(root, cfg.dbPath);
   }
+  if (!path.isAbsolute(cfg.backupDir)) cfg.backupDir = path.join(root, cfg.backupDir);
   return cfg;
 }
