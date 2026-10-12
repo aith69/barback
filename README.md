@@ -19,6 +19,36 @@ No cash-register integration, just a reliable record of what was ordered.
 
 Node.js (>= 20), Fastify, SQLite (`better-sqlite3`), vanilla JS frontend, no build step.
 
+## Install Node.js without apt (Debian, as root)
+
+On Debian 13 `apt install npm` pulls in hundreds of MB of dependencies. The official
+tarball is much lighter (Node 22, checksum verified):
+
+```bash
+apt install -y --no-install-recommends curl ca-certificates xz-utils git
+cd /tmp
+ARCH=$([ "$(uname -m)" = aarch64 ] && echo arm64 || echo x64)
+BASE=https://nodejs.org/dist/latest-v22.x
+curl -fsSLO $BASE/SHASUMS256.txt
+F=$(grep -o "node-v[0-9.]*-linux-$ARCH.tar.xz" SHASUMS256.txt | head -1)
+curl -fsSLO $BASE/$F
+grep " $F\$" SHASUMS256.txt | sha256sum -c -
+mkdir -p /opt/node
+tar -xJf $F -C /opt/node --strip-components=1
+rm -rf /opt/node/include /opt/node/share
+ln -sf /opt/node/bin/node /usr/local/bin/node
+ln -sf /opt/node/bin/npm /usr/local/bin/npm
+ln -sf /opt/node/bin/npx /usr/local/bin/npx
+rm -f /tmp/$F /tmp/SHASUMS256.txt
+echo 'export PATH=/opt/node/bin:$PATH' > /etc/profile.d/node.sh
+export PATH=/opt/node/bin:$PATH
+hash -r
+node -v && npm -v
+```
+
+If a shell still says `npm: command not found`, open a new session or run
+`export PATH=/opt/node/bin:$PATH`.
+
 ## Quick start
 
 ```bash
@@ -92,6 +122,10 @@ the tests fail if any key or placeholder is missing. User-defined data
 ## Branches
 
 - `develop`: day-to-day work, via `feature/*` branches.
+
+A second copy next to the stable one is handy for trying changes: clone `develop` into
+`barback-dev/`, give it its own `config.local.json` (another `port`, another `sharedPin`) and
+run `npm run demo`. Its database is separate. Releases are merged into `main` from the stable copy.
 - `main`: stable, tagged releases only (`v1.0.0`). Merge `develop` into `main` when tests are green.
 
 ## Roadmap
