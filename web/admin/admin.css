@@ -15,3 +15,4 @@ main { max-width: 48rem; }
 input[type=text] { font: inherit; padding: .3rem .4rem; }
 button { font: inherit; padding: .3rem .7rem; }
 .chip input[inputmode=decimal] { width: 4.5ch; text-align: right; }
+.chip .check { font-size: .8rem; }

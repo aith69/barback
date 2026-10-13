@@ -11,8 +11,8 @@ export default async function catalog(app) {
     const items = db
       .prepare('SELECT id, category_id, name, price_cents, sold_out FROM items WHERE active = 1 AND deleted_at IS NULL ORDER BY sort_order, id')
       .all();
-    const notes = db.prepare('SELECT id, category_id, item_id, name, price_cents FROM modifiers WHERE active = 1 AND deleted_at IS NULL ORDER BY sort_order, id').all();
-    const pick = ({ id, name, price_cents }) => ({ id, name, price_cents });
+    const notes = db.prepare('SELECT id, category_id, item_id, name, price_cents, required FROM modifiers WHERE active = 1 AND deleted_at IS NULL ORDER BY sort_order, id').all();
+    const pick = ({ id, name, price_cents, required }) => ({ id, name, price_cents, required: Boolean(required) });
 
     return {
       categories: categories.map((c) => {
