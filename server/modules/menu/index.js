@@ -23,7 +23,7 @@ export default async function menu(app) {
   app.get('/api/admin/menu', async () => ({
     categories: db.prepare('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY sort_order, id').all().map(cat),
     items: db.prepare('SELECT * FROM items WHERE deleted_at IS NULL ORDER BY sort_order, id').all().map(item),
-    modifiers: db.prepare('SELECT * FROM modifiers WHERE deleted_at IS NULL ORDER BY sort_order, id').all().map((m) => mapBools(m, ['active'])),
+    modifiers: db.prepare('SELECT * FROM modifiers WHERE deleted_at IS NULL ORDER BY sort_order, id').all().map((m) => mapBools(m, ['active', 'required'])),
   }));
 
   // --- categories ---

@@ -121,5 +121,7 @@
   "stats.type.product": "Product",
   "stats.type.variant": "Variant",
   "stats.type.note": "Free text",
-  "stats.hint.variants": "Open a product with a click to see its variants and free-text requests: quantity (share of the product) and extra charged."
+  "stats.hint.variants": "Open a product with a click to see its variants and free-text requests: quantity (share of the product) and extra charged.",
+  "admin.notes.required": "Required",
+  "waiter.requiredHint": "Choose at least one of the options marked with *."
 }

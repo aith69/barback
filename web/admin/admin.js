@@ -42,15 +42,18 @@ function nameInput(value, onSave) {
 const check = (label, checked, onToggle) =>
   h('label', { class: 'check' }, h('input', { type: 'checkbox', checked, onchange: (e) => onToggle(e.target.checked) }), label);
 
-function addForm(placeholder, onAdd, withPrice = false) {
+function addForm(placeholder, onAdd, withPrice = false, withRequired = false) {
   const name = h('input', { type: 'text', placeholder, maxlength: 80, required: true });
   const price = withPrice
     ? h('input', { type: 'text', inputmode: 'decimal', placeholder: `${t('admin.item.price')} (${symbol})`, size: 8, required: withPrice !== 'optional' })
     : null;
+  const required = withRequired ? h('input', { type: 'checkbox' }) : null;
   return h('form', {
     class: 'add',
-    onsubmit: (e) => { e.preventDefault(); onAdd(name.value.trim(), price && price.value); },
-  }, name, price, h('button', { type: 'submit' }, t('common.add')));
+    onsubmit: (e) => { e.preventDefault(); onAdd(name.value.trim(), price && price.value, Boolean(required && required.checked)); },
+  }, name, price,
+  required ? h('label', { class: 'check' }, required, t('admin.notes.required')) : null,
+  h('button', { type: 'submit' }, t('common.add')));
 }
 
 function mover(path, ids, id) {
@@ -72,14 +75,15 @@ function notes(list, owner) {
     list.map((m) => h('span', { class: 'chip' },
       nameInput(m.name, (v) => patch('modifiers', m.id, { name: v })),
       h('input', { type: 'text', inputmode: 'decimal', size: 4, title: t('admin.item.price'), value: formatDecimal(m.price_cents, language), onchange: (e) => notePrice(m, e) }),
+      check(t('admin.notes.required'), m.required, (on) => patch('modifiers', m.id, { required: on })),
       h('button', { type: 'button', title: t('common.delete'), onclick: () => remove('modifiers', m.id, m.name) }, '✕'))),
-    addForm(t('admin.notes.add'), (name, price) => addNote(owner, name, price), 'optional'));
+    addForm(t('admin.notes.add'), (name, price, required) => addNote(owner, name, price, required), 'optional', true));
 }
 
-function addNote(owner, name, priceText) {
+function addNote(owner, name, priceText, required = false) {
   const price_cents = priceText.trim() === '' ? 0 : parseMoney(priceText);
   if (price_cents === null) { alert(t('admin.error.price')); return; }
-  return act(() => api('POST', '/api/admin/modifiers', { ...owner, name, price_cents }));
+  return act(() => api('POST', '/api/admin/modifiers', { ...owner, name, price_cents, required }));
 }
 
 function notePrice(m, e) {

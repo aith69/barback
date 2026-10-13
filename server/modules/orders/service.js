@@ -21,7 +21,7 @@ export function createOrderService(db, config) {
     ),
     customItem: db.prepare('SELECT * FROM items WHERE is_custom = 1'),
     allowedNotes: db.prepare(
-      'SELECT id, name, price_cents FROM modifiers WHERE active = 1 AND deleted_at IS NULL AND (item_id = @item OR category_id = @category)',
+      'SELECT id, name, price_cents, required FROM modifiers WHERE active = 1 AND deleted_at IS NULL AND (item_id = @item OR category_id = @category)',
     ),
     currentNotes: db.prepare(
       'SELECT modifier_id AS id, modifier_name AS name, price_cents FROM order_line_modifiers WHERE order_line_id = ?',
@@ -86,11 +86,17 @@ export function createOrderService(db, config) {
   // Notes already on the line keep the name and price they had when they were added.
   function resolveNotes(item, ids, existing = new Map()) {
     const allowed = new Map(q.allowedNotes.all({ item: item.id, category: item.category_id }).map((m) => [m.id, m]));
-    return [...new Set(ids)].map((id) => {
+    const notes = [...new Set(ids)].map((id) => {
       const note = existing.get(id) ?? allowed.get(id);
       if (!note) throw httpError(400, 'invalid quick note');
       return note;
     });
+    // When the item has required notes, at least one of them must be chosen (more than one is fine).
+    const required = [...allowed.values()].filter((m) => m.required);
+    if (required.length && !notes.some((n) => required.some((r) => r.id === n.id))) {
+      throw httpError(400, 'required quick note missing');
+    }
+    return notes;
   }
 
   function insertLine(orderId, operatorId, { item_id, custom_name, quantity, note, note_price_cents = 0, modifier_ids = [] }) {

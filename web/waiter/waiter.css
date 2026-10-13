@@ -41,3 +41,5 @@ dialog.editor { border: 1px solid currentColor; border-radius: .75rem; padding: 
 .ready-row button { font: inherit; padding: .5rem 1rem; border-radius: .5rem; border: 1px solid currentColor; cursor: pointer; }
 .sep { grid-column: 1 / -1; width: 100%; margin: .2rem 0; border: 0; border-top: 2px solid currentColor; opacity: .4; }
 .item.custom { border-style: dashed; }
+.reqhint { margin: .25rem 0; font-size: .95rem; opacity: .75; }
+.reqhint.bad { color: #c0392b; opacity: 1; font-weight: 600; }

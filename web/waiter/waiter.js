@@ -22,6 +22,7 @@ const draftUnit = (d) =>
   d.item.modifiers.filter((m) => d.modifier_ids.includes(m.id)).reduce((sum, m) => sum + (m.price_cents ?? 0), 0) +
   (d.note ? (d.note_price_cents ?? 0) : 0);
 const noteNames = (item, ids) => item.modifiers.filter((m) => ids.includes(m.id)).map((m) => m.name).join(', ');
+const mustChoose = (item) => item.modifiers.some((m) => m.required);
 
 const savedOperator = {
   get() { try { return Number(localStorage.getItem('barback.operator')) || null; } catch { return null; } },
@@ -110,6 +111,9 @@ function openEditor({ title, item, quantity = 1, selected = [], note = '', noteP
     value: notePrice ? formatDecimal(notePrice, language) : '',
     placeholder: `${t('waiter.notePrice')} (${currencySymbol(language, currency)})`,
   });
+  // Required notes: at least one of them has to be chosen to save (more than one is fine).
+  const mustPick = item.modifiers.filter((m) => m.required);
+  const hint = mustPick.length ? h('p', { class: 'reqhint' }, t('waiter.requiredHint')) : null;
   const dlg = h('dialog', { class: 'editor' });
   dlg.addEventListener('close', () => dlg.remove());
   dlg.append(...[
@@ -118,11 +122,12 @@ function openEditor({ title, item, quantity = 1, selected = [], note = '', noteP
       h('button', { type: 'button', onclick: () => { if (qty > 1) qtyEl.textContent = String(--qty); } }, '−'),
       qtyEl,
       h('button', { type: 'button', onclick: () => { if (qty < 99) qtyEl.textContent = String(++qty); } }, '+')),
+    hint,
     available.length
       ? h('div', { class: 'mods' }, available.map((m) =>
         h('label', { class: 'check' },
           h('input', { type: 'checkbox', checked: chosen.has(m.id), onchange: (e) => (e.target.checked ? chosen.add(m.id) : chosen.delete(m.id)) }),
-          m.price_cents ? `${m.name} (+${money(m.price_cents)})` : m.name)))
+          `${m.name}${m.required ? ' *' : ''}${m.price_cents ? ` (+${money(m.price_cents)})` : ''}`)))
       : null,
     textInput,
     priceInput,
@@ -132,6 +137,7 @@ function openEditor({ title, item, quantity = 1, selected = [], note = '', noteP
       h('button', { type: 'button', class: 'primary', onclick: () => {
         const text = textInput.value.trim();
         if (askName && !text) { textInput.focus(); return; }
+        if (mustPick.length && !mustPick.some((m) => chosen.has(m.id))) { hint.classList.add('bad'); return; }
         let extra = 0;
         if (priceInput && text && priceInput.value.trim() !== '') {
           extra = parseMoney(priceInput.value);
@@ -228,6 +234,17 @@ async function showTable(number, fromCash = false) {
   }
 
   function addToDraft(item) {
+    if (mustChoose(item)) { // required notes: ask first, nothing is added if the editor is cancelled
+      openEditor({
+        title: item.name,
+        item,
+        onSave: (v) => {
+          draft.push({ item, quantity: v.quantity, modifier_ids: v.modifier_ids, note: v.note, note_price_cents: v.note_price_cents });
+          drawDraft();
+        },
+      });
+      return;
+    }
     const same = draft.find((d) => d.item.id === item.id && !d.note && !d.modifier_ids.length);
     if (same) same.quantity += 1;
     else draft.push({ item, quantity: 1, modifier_ids: [], note: '' });
@@ -280,8 +297,7 @@ async function showTable(number, fromCash = false) {
       order = (await api('POST', `/api/tables/${number}/lines`, { operator_id: operator.id, lines })).order;
       draft.length = 0;
       if (fromCash) { location.href = `/counter/#/cash/${number}`; return; } // back to the cash register
-      drawDraft();
-      drawExisting();
+      location.hash = '#/'; // back to the table list
     } catch (e) {
       alert(e.status === 400 || e.status === 409 ? t('waiter.error.unavailable') : t('common.error'));
       try { menu = await api('GET', '/api/menu'); drawPicker(); } catch { /* keep the old menu */ }
