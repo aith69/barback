@@ -94,7 +94,7 @@ async function showQueue() {
     const todo = tables
       .filter((tb) => firstTodo(tb))
       .sort((a, b) => firstTodo(a).created_at.localeCompare(firstTodo(b).created_at));
-    const ready = tables.filter((tb) => tb.lines.every((l) => l.status === 'prepared'));
+    const ready = tables.filter((tb) => !firstTodo(tb) && tb.lines.some((l) => l.status === 'prepared' && !l.served_at));
     fill(app, header('queue'),
       todo.length ? todo.map(card) : h('p', { class: 'muted' }, t('counter.queue.empty')),
       ready.length

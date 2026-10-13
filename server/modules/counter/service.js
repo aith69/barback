@@ -6,7 +6,7 @@ export function createCounterService(db) {
   const q = {
     queueLines: db.prepare(
       `SELECT o.id AS order_id, o.table_number, o.opened_at,
-              l.id, l.item_name, l.quantity, l.note, l.status, l.price_pending, l.created_at, op.name AS created_by
+              l.id, l.item_name, l.quantity, l.note, l.status, l.price_pending, l.served_at, l.created_at, op.name AS created_by
        FROM orders o
        JOIN order_lines l ON l.order_id = o.id AND l.removed_at IS NULL
        LEFT JOIN operators op ON op.id = l.created_by
@@ -76,6 +76,7 @@ export function createCounterService(db) {
           note: r.note,
           status: r.status,
           price_pending: Boolean(r.price_pending),
+          served_at: r.served_at,
           created_at: r.created_at,
           created_by: r.created_by,
           modifiers: notes.get(r.id) ?? [],

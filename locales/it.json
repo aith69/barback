@@ -121,5 +121,7 @@
   "stats.type.product": "Prodotto",
   "stats.type.variant": "Variante",
   "stats.type.note": "Testo libero",
-  "stats.hint.variants": "Clicca su un prodotto per vedere le sue varianti e le richieste in testo libero: quantità (quota sul prodotto) ed extra incassato."
+  "stats.hint.variants": "Clicca su un prodotto per vedere le sue varianti e le richieste in testo libero: quantità (quota sul prodotto) ed extra incassato.",
+  "admin.notes.required": "Obbligatoria",
+  "waiter.requiredHint": "Scegli almeno una delle opzioni segnate con *."
 }
